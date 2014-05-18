@@ -25,13 +25,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
 #include <linux/kd.h>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
-
+#include <X11/Xlib.h>
 #include "main.h"
 
 /**
@@ -41,7 +42,29 @@
 Config *load_config(int argc, const char *argv[]) {
 	Config *result = malloc(sizeof(Config));
 
-	result->device = open("/dev/console", O_RDONLY);
+	// default configuration
+	flags.detect_tty = false;
+	flags.use_xorg = false;
+
+	// parse arguments
+	while (argc > 1) {
+		if (strcmp(argv[1], "-t") == 0) {
+			flags.detect_tty = true;
+
+		} else if (strcmp(argv[1], "-x") == 0) {
+			flags.use_xorg = true;
+		}
+
+		// shift parameters
+		argc--;
+		argv++;
+	}
+
+	// open console device
+	if (flags.detect_tty)
+		result->device = open(ttyname(0), O_RDONLY); else
+		result->device = open("/dev/console", O_RDONLY);
+
 	result->led = LED_SCROLL_LOCK;
 	result->check_interval = 200000;
 	result->power_on_interval = 40000;
@@ -54,6 +77,12 @@ Config *load_config(int argc, const char *argv[]) {
 	memset(result->old_data, 0, BUFFER_SIZE);
 	memset(result->new_data, 0, BUFFER_SIZE);
 
+	// get X.Org display
+	if (flags.use_xorg) {
+		result->display = XOpenDisplay(":0");
+		result->keyboard_state = malloc(sizeof(XKeyboardState));
+	}
+
 	return result;
 }
 
@@ -62,21 +91,30 @@ Config *load_config(int argc, const char *argv[]) {
  */
 void unload_config(Config *config) {
 	close(config->device);
+
+	// free memory taken by the buffer
 	free(config->old_data);
 	free(config->new_data);
+
+	// close X.Org display
+	if (flags.use_xorg) {
+		XCloseDisplay(config->display);
+		free(config->keyboard_state);
+	}
+
 	free(config);
 }
 
 /**
  * Set led on keyboard to specified state.
  */
-char set_keyboard_led(Config *config, char new_state) {
+char set_keyboard_led(Config *config, unsigned char new_state) {
 	char result = 0;
-	char current_state;
+	unsigned char current_state = 0;
 
 	// exit if we can't get current state
 	if (get_led_state(config, &current_state) == -1) {
-		printf("Unable to get current LED state. Are you root?");
+		printf("Unable to get current LED state. Are you root?\n");
 		exit(1);
 	}
 
@@ -95,11 +133,33 @@ char set_keyboard_led(Config *config, char new_state) {
 /**
  * Get current state of LEDs.
  */
-char get_led_state(Config *config, char *state) {
+char get_led_state(Config *config, unsigned char *state) {
 	char result = 0;
+	unsigned long x_led_mask;
 
-	if (ioctl(config->device, KDGETLED, state))
-		result = -1;
+	if (flags.use_xorg) {
+		// use Xlib to get key mask
+		XGetKeyboardControl(config->display, config->keyboard_state);
+		x_led_mask = config->keyboard_state->led_mask;
+
+		// reset state
+		*state = 0;
+
+		// form new state
+		if ((x_led_mask & X_MASK_CAPS_LOCK) == X_MASK_CAPS_LOCK)
+			*state |= LED_CAPS_LOCK;
+
+		if ((x_led_mask & X_MASK_NUM_LOCK) == X_MASK_NUM_LOCK)
+			*state |= LED_NUM_LOCK;
+
+		if ((x_led_mask & X_MASK_SCROLL_LOCK) == X_MASK_SCROLL_LOCK)
+			*state |= LED_SCROLL_LOCK;
+
+	} else {
+		// old fashioned way through ioctl
+		if (ioctl(config->device, KDGETLED, state))
+			result = -1;
+	}
 
 	return result;
 }
