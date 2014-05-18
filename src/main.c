@@ -46,6 +46,7 @@ Config *load_config(int argc, const char *argv[]) {
 	// default configuration
 	flags.detect_tty = false;
 	flags.use_xorg = false;
+        int led = LED_SCROLL_LOCK;
 
 	// parse arguments
 	while (argc > 1) {
@@ -55,6 +56,13 @@ Config *load_config(int argc, const char *argv[]) {
 		} else if (strcmp(argv[1], "-x") == 0) {
 			flags.use_xorg = true;
 		}
+
+                if (strncmp(argv[1], "cap", 3) == 0) {
+                        led = LED_CAPS_LOCK;
+
+                } else if (strncmp(argv[1], "num", 3) == 0) {
+                        led = LED_NUM_LOCK;
+                }
 
 		// shift parameters
 		argc--;
@@ -66,7 +74,7 @@ Config *load_config(int argc, const char *argv[]) {
 		result->device = open(ttyname(0), O_RDONLY); else
 		result->device = open("/dev/console", O_RDONLY);
 
-	result->led = LED_SCROLL_LOCK;
+	result->led = led;
 	result->check_interval = 200000;
 	result->power_on_interval = 40000;
 	result->power_off_interval= 10000;
@@ -185,6 +193,12 @@ void handle_signal(int number) {
 }
 
 int main(int argc, const char *argv[]) {
+
+        if ((strcmp(argv[1], "-h")==0) | (strcmp(argv[1], "--help")==0)) {
+                printf("Usage: disk_indicator [flag] [target]\n\tFlags: -x (X11), -t (TTY)\n\tTargets: scroll (default), num, caps\n");
+                exit(EXIT_SUCCESS);
+        }
+
 	// register signal handler
 	signal(SIGINT, handle_signal);
 	
