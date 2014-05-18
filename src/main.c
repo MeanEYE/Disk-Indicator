@@ -192,6 +192,12 @@ void handle_signal(int number) {
 }
 
 int main(int argc, const char *argv[]) {
+
+        if ((strcmp(argv[1], "-h")==0) | (strcmp(argv[1], "--help")==0)) {
+                printf("Usage: disk_indicator [flag] [target]\n\tFlags: -x (X11), -t (TTY)\n\tTargets: scroll (default), num, caps\n");
+                exit(EXIT_SUCCESS);
+        }
+
 	// register signal handler
 	signal(SIGINT, handle_signal);
 	
