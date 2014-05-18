@@ -1,7 +1,7 @@
 PROJECT=disk_indicator
 COMPILER=c99
-LINK_FLAGS=-lm
-COMPILE_FLAGS=-Wall -pedantic -Werror -g -D _BSD_SOURCE
+LINK_FLAGS=-lm -lX11
+COMPILE_FLAGS=-Wall -pedantic -Werror -g -D _BSD_SOURCE 
 OBJECTS=main.o
 
 all: $(PROJECT)
