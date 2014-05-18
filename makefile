@@ -10,7 +10,7 @@ all: $(PROJECT)
 	$(COMPILER) $(COMPILE_FLAGS) -c -s $<
 
 $(PROJECT): $(OBJECTS)
-	$(COMPILER) $(LINK_FLAGS) $(OBJECTS) -o $(PROJECT)
+	$(COMPILER) $(OBJECTS) $(LINK_FLAGS) -o $(PROJECT)
 
 clean:
 	rm $(PROJECT) *.o
