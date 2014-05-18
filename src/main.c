@@ -71,11 +71,8 @@ Config *load_config(int argc, const char *argv[]) {
 	result->power_off_interval= 10000;
 
 	// allocate memory for comparison
-	result->old_data = (char *) malloc(BUFFER_SIZE);
-	result->new_data = (char *) malloc(BUFFER_SIZE);
-
-	memset(result->old_data, 0, BUFFER_SIZE);
-	memset(result->new_data, 0, BUFFER_SIZE);
+	result->old_data = (char *) calloc(1, BUFFER_SIZE);
+	result->new_data = (char *) calloc(1, BUFFER_SIZE);
 
 	// get X.Org display
 	if (flags.use_xorg) {
