@@ -10,9 +10,7 @@ sudo ./disk_indicator <method> [params]
 
 -x     Use X.Org for detecting keyboard flags. If you are using graphical desktop
        environment use this flag to avoid getting your LEDs reset.
-       
 -c     Use standard TTY console interface to control LEDs.
-
 -t     Use ACPI to set LEDs on ThinkPad laptops.
 
 X.Org params: [led]
