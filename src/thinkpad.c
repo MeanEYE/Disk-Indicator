@@ -2,7 +2,9 @@
  * Support for notifications using ThinkPad LEDs.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "thinkpad.h"
 
 /**
@@ -12,7 +14,18 @@ char thinkpad_init(int argc, const char *argv[])
 {
 	char result = 0;
 
-	thinkpad_config = malloc(sizeof(ThinkPadConfig));
+	// default config
+	thinkpad_led = "0";
+
+	// parse parameters
+	if (argc > 0)
+		thinkpad_led = (char*) strdup(argv[0]);
+
+	// open acpi device
+	thinkpad_device = fopen("/proc/acpi/ibm/led", "w");
+
+	if (!thinkpad_device)
+		result = -1;
 
 	return result;
 }
@@ -22,7 +35,7 @@ char thinkpad_init(int argc, const char *argv[])
  */
 void thinkpad_quit()
 {
-	free(thinkpad_config);
+	fclose(thinkpad_device);
 }
 
 /**
@@ -31,6 +44,13 @@ void thinkpad_quit()
 char thinkpad_turn_on()
 {
 	char result = 0;
+
+	// set new state
+	fputs(thinkpad_led, thinkpad_device);
+	fputs(" on\n", thinkpad_device);
+
+	// flush to apply
+	fflush(thinkpad_device);
 
 	return result;
 }
@@ -41,6 +61,13 @@ char thinkpad_turn_on()
 char thinkpad_turn_off()
 {
 	char result = 0;
+
+	// set new state
+	fputs(thinkpad_led, thinkpad_device);
+	fputs(" off\n", thinkpad_device);
+
+	// flush to apply
+	fflush(thinkpad_device);
 
 	return result;
 }

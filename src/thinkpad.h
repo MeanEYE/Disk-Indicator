@@ -1,11 +1,8 @@
 #ifndef THINKPAD_INCLUDED
 #define THINKPAD_INCLUDED
 
-typedef struct {
-	char led[15];
-} ThinkPadConfig;
-
-static ThinkPadConfig *thinkpad_config;
+char *thinkpad_led;
+FILE *thinkpad_device;
 
 char thinkpad_init(int argc, const char *argv[]);
 void thinkpad_quit();
