@@ -43,7 +43,8 @@
  * Create new configuration structure and populate
  * with default values if no arguments were passed.
  */
-Config *load_config(int argc, const char *argv[]) {
+Config *load_config(int argc, const char *argv[])
+{
 	Config *result = malloc(sizeof(Config));
 	char init_result = 0;
 
@@ -108,7 +109,8 @@ Config *load_config(int argc, const char *argv[]) {
 /**
  * Free memory taken by the config.
  */
-void unload_config(Config *config) {
+void unload_config(Config *config)
+{
 	// free memory taken by the buffer
 	free(config->old_data);
 	free(config->new_data);
@@ -135,7 +137,8 @@ void unload_config(Config *config) {
 /**
  * Get content for disk statistics file.
  */
-void get_disk_stats(void *data, unsigned int size) {
+void get_disk_stats(void *data, unsigned int size)
+{
 	FILE *handle;
 
 	// open file
@@ -149,12 +152,14 @@ void get_disk_stats(void *data, unsigned int size) {
 /**
  * Handle external signals.
  */
-void handle_signal(int number) {
+void handle_signal(int number)
+{
 	unload_config(config);
 	exit(EXIT_SUCCESS);
 }
 
-int main(int argc, const char *argv[]) {
+int main(int argc, const char *argv[])
+{
 	// show help if no arguments are specified
 	if ((argc == 1) || (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)) {
 		printf(
