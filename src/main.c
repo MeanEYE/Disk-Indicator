@@ -35,6 +35,9 @@
 #include <X11/Xlib.h>
 
 #include "main.h"
+#include "xorg.h"
+#include "console.h"
+#include "thinkpad.h"
 
 /**
  * Create new configuration structure and populate
@@ -42,39 +45,11 @@
  */
 Config *load_config(int argc, const char *argv[]) {
 	Config *result = malloc(sizeof(Config));
+	char init_result = 0;
 
 	// default configuration
-	flags.detect_tty = false;
-	flags.use_xorg = false;
-        int led = LED_SCROLL_LOCK;
-
-	// parse arguments
-	while (argc > 1) {
-		if (strcmp(argv[1], "-t") == 0) {
-			flags.detect_tty = true;
-
-		} else if (strcmp(argv[1], "-x") == 0) {
-			flags.use_xorg = true;
-		}
-
-                if (strncmp(argv[1], "cap", 3) == 0) {
-                        led = LED_CAPS_LOCK;
-
-                } else if (strncmp(argv[1], "num", 3) == 0) {
-                        led = LED_NUM_LOCK;
-                }
-
-		// shift parameters
-		argc--;
-		argv++;
-	}
-
-	// open console device
-	if (flags.detect_tty)
-		result->device = open(ttyname(0), O_RDONLY); else
-		result->device = open("/dev/console", O_RDONLY);
-
-	result->led = led;
+	result->initialized = false;
+	result->method = X_ORG;
 	result->check_interval = 200000;
 	result->power_on_interval = 40000;
 	result->power_off_interval= 10000;
@@ -83,11 +58,49 @@ Config *load_config(int argc, const char *argv[]) {
 	result->old_data = (char *) calloc(1, BUFFER_SIZE);
 	result->new_data = (char *) calloc(1, BUFFER_SIZE);
 
-	// get X.Org display
-	if (flags.use_xorg) {
-		result->display = XOpenDisplay(":0");
-		result->keyboard_state = malloc(sizeof(XKeyboardState));
+	// shift parameters as first param is just program executable
+	argc--;
+	argv++;
+
+	// parse arguments
+	if (strncmp(argv[0], "-x", 2) == 0) {
+		result->method = X_ORG;
+
+	} else if (strncmp(argv[0], "-c", 2) == 0) {
+		result->method = CONSOLE;
+
+	} else if (strncmp(argv[0], "-t", 2) == 0) {
+		result->method = THINKPAD;
 	}
+
+	// shift parameters
+	argc--;
+	argv++;
+
+	// initialize specified subsystem
+	switch (result->method) {
+		case X_ORG:
+			init_result = xorg_init(argc, argv);
+			result->turn_notification_on = &xorg_turn_on;
+			result->turn_notification_off = &xorg_turn_off;
+			break;
+
+		case CONSOLE:
+			init_result = console_init(argc, argv);
+			result->turn_notification_on = &console_turn_on;
+			result->turn_notification_off = &console_turn_off;
+			break;
+
+		case THINKPAD:
+			init_result = thinkpad_init(argc, argv);
+			result->turn_notification_on = &thinkpad_turn_on;
+			result->turn_notification_off = &thinkpad_turn_off;
+			break;
+	}
+
+	// mark subsystem as initialized
+	if (init_result == 0)
+		result->initialized = true;
 
 	return result;
 }
@@ -96,78 +109,27 @@ Config *load_config(int argc, const char *argv[]) {
  * Free memory taken by the config.
  */
 void unload_config(Config *config) {
-	close(config->device);
-
 	// free memory taken by the buffer
 	free(config->old_data);
 	free(config->new_data);
 
-	// close X.Org display
-	if (flags.use_xorg) {
-		XCloseDisplay(config->display);
-		free(config->keyboard_state);
-	}
+	// let subsystem clean up after themselves
+	if (config->initialized)
+		switch (config->method) {
+			case X_ORG:
+				xorg_quit();
+				break;
+
+			case CONSOLE:
+				console_quit();
+				break;
+
+			case THINKPAD:
+				thinkpad_quit();
+				break;
+		}
 
 	free(config);
-}
-
-/**
- * Set led on keyboard to specified state.
- */
-char set_keyboard_led(Config *config, unsigned char new_state) {
-	char result = 0;
-	unsigned char current_state = 0;
-
-	// exit if we can't get current state
-	if (get_led_state(config, &current_state) == -1) {
-		printf("Unable to get current LED state. Are you root?\n");
-		exit(1);
-	}
-
-	// change state of LEDs
-	if (new_state == 1)
-		current_state |= config->led; else
-		current_state &= ~config->led;
-
-	// apply new state
-	if (ioctl(config->device, KDSETLED, current_state))
-		result = -1;
-
-	return result;
-}
-
-/**
- * Get current state of LEDs.
- */
-char get_led_state(Config *config, unsigned char *state) {
-	char result = 0;
-	unsigned long x_led_mask;
-
-	if (flags.use_xorg) {
-		// use Xlib to get key mask
-		XGetKeyboardControl(config->display, config->keyboard_state);
-		x_led_mask = config->keyboard_state->led_mask;
-
-		// reset state
-		*state = 0;
-
-		// form new state
-		if ((x_led_mask & X_MASK_CAPS_LOCK) == X_MASK_CAPS_LOCK)
-			*state |= LED_CAPS_LOCK;
-
-		if ((x_led_mask & X_MASK_NUM_LOCK) == X_MASK_NUM_LOCK)
-			*state |= LED_NUM_LOCK;
-
-		if ((x_led_mask & X_MASK_SCROLL_LOCK) == X_MASK_SCROLL_LOCK)
-			*state |= LED_SCROLL_LOCK;
-
-	} else {
-		// old fashioned way through ioctl
-		if (ioctl(config->device, KDGETLED, state))
-			result = -1;
-	}
-
-	return result;
 }
 
 /**
@@ -193,11 +155,29 @@ void handle_signal(int number) {
 }
 
 int main(int argc, const char *argv[]) {
-
-        if ((strcmp(argv[1], "-h")==0) | (strcmp(argv[1], "--help")==0)) {
-                printf("Usage: disk_indicator [flag] [target]\n\tFlags: -x (X11), -t (TTY)\n\tTargets: scroll (default), num, caps\n");
-                exit(EXIT_SUCCESS);
-        }
+	// show help if no arguments are specified
+	if ((argc == 1) || (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)) {
+		printf(
+			"Usage: disk_indicator <method> [parameters]\n"
+			"Methods:\n"
+			"\t-x\tUse X.Org server to set keyboard LEDs.\n"
+			"\t-c\tUse TTY console interfact to set keyboard LEDs.\n"
+			"\t-t\tUse ThinkPad LEDs for notification.\n\n"
+			"X.Org parameters: [led]\n"
+			"\tnum\tUse NumLock\n"
+			"\tcap\tUse CapsLock\n"
+			"\tscr\tUse ScrollLock (default)\n\n"
+			"TTY console parameters: [device [led]]\n"
+			"\ttty[1-9]\n"
+			"\tconsole\t(default)\n\n"
+			"\tnum\tUse NumLock\n"
+			"\tcap\tUse CapsLock\n"
+			"\tscr\tUse ScrollLock (default)\n\n"
+			"ThinkPad parameters: [led]\n"
+			"\t0-15\n"
+		);
+		exit(EXIT_SUCCESS);
+	}
 
 	// register signal handler
 	signal(SIGINT, handle_signal);
@@ -205,6 +185,14 @@ int main(int argc, const char *argv[]) {
 	// load config
 	config = load_config(argc, argv);
 
+	// check if config was successfully initialized
+	if (!config->initialized) {
+		unload_config(config);
+		printf("Error initializing specified subsystem.\n");
+		exit(1);
+	}
+
+	// start main loop
 	while (1) {
 		get_disk_stats(config->new_data, BUFFER_SIZE);
 
@@ -213,12 +201,12 @@ int main(int argc, const char *argv[]) {
 			get_disk_stats(config->new_data, BUFFER_SIZE);
 
 			// turn the light on
-			set_keyboard_led(config, 1);
-			usleep(config->power_off_interval);
+			config->turn_notification_on();
+			usleep(config->power_on_interval);
 
 			// turn it off
-			set_keyboard_led(config, 0);
-			usleep(config->power_on_interval);
+			config->turn_notification_off();
+			usleep(config->power_off_interval);
 		}
 
 		usleep(config->check_interval);
