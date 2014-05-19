@@ -4,16 +4,18 @@
 #ifndef XORG_INCLUDED
 #define XORG_INCLUDED
 
-#define X_MASK_CAPS_LOCK 0x1
-#define X_MASK_NUM_LOCK 0x2
-#define X_MASK_SCROLL_LOCK 0x4
+enum xorg_led {
+	XORG_CAPS_LOCK = 1,
+	XORG_NUM_LOCK = 2,
+	XORG_SCROLL_LOCK = 3
+};
 
 typedef struct {
 	Display *display;
 	XKeyboardState *keyboard_state;
 
 	bool initial_state;
-	char flag_bit;
+	enum xorg_led flag_bit;
 } XOrgConfig;
 
 XOrgConfig *xorg_config;

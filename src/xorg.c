@@ -4,7 +4,9 @@
  * users in graphical desktop environment.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <X11/Xlib.h>
 #include "xorg.h"
 
@@ -19,9 +21,24 @@ char xorg_init(int argc, const char *argv[])
 	xorg_config = malloc(sizeof(XOrgConfig));
 
 	// open connection to display server
-	xorg_config->display = XOpenDisplay(":0");
+	xorg_config->display = XOpenDisplay(NULL);
 	xorg_config->keyboard_state = malloc(sizeof(XKeyboardState));
-	xorg_config->flag_bit = X_MASK_SCROLL_LOCK;
+	xorg_config->flag_bit = XORG_SCROLL_LOCK;
+
+	// parse additional parameters
+	while (argc > 0) {
+		if (strncmp(argv[0], "scr", 3) == 0) {
+			xorg_config->flag_bit = XORG_SCROLL_LOCK;
+		} else if (strncmp(argv[0], "num", 3) == 0) {
+			xorg_config->flag_bit = XORG_NUM_LOCK;
+		} else if (strncmp(argv[0], "cap", 3) == 0) {
+			xorg_config->flag_bit = XORG_CAPS_LOCK;
+		}
+
+		// shift parameters
+		argc--;
+		argv++;
+	}
 
 	return result;
 }
@@ -51,14 +68,16 @@ char xorg_turn_on()
 	// store initial flag state
 	xorg_config->initial_state = (led_mask & xorg_config->flag_bit) == xorg_config->flag_bit;
 
-	// toggle flag
-	led_mask ^= xorg_config->flag_bit;
-
 	// set new state
-	values.led_mode = LedModeOn;
+	if (xorg_config->initial_state)
+		values.led_mode = LedModeOff; else
+		values.led_mode = LedModeOn;
 	values.led = xorg_config->flag_bit;
 
 	XChangeKeyboardControl(xorg_config->display, KBLed | KBLedMode, &values);
+
+	// get the state again to apply changes
+	XGetKeyboardControl(xorg_config->display, xorg_config->keyboard_state);
 
 	return result;
 }
@@ -69,6 +88,18 @@ char xorg_turn_on()
 char xorg_turn_off()
 {
 	char result = 0;
+	XKeyboardControl values;
+
+	// set new state
+	if (xorg_config->initial_state)
+		values.led_mode = LedModeOn; else
+		values.led_mode = LedModeOff;
+	values.led = xorg_config->flag_bit;
+
+	XChangeKeyboardControl(xorg_config->display, KBLed | KBLedMode, &values);
+
+	// get the state again to apply changes
+	XGetKeyboardControl(xorg_config->display, xorg_config->keyboard_state);
 
 	return result;
 }
