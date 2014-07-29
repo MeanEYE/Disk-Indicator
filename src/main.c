@@ -23,6 +23,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _POSIX_SOURCE 1
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -158,8 +159,46 @@ void handle_signal(int number)
 	exit(EXIT_SUCCESS);
 }
 
+/**
+ * Check if we're attached to a terminal
+ */
+int isattached(void)
+{
+        return isatty(fileno(stdout) && isatty(fileno(stdin)) && isatty(fileno(stderr)));
+}
+
+/**
+ * Fork/daemonize to background and detach from console
+ */
+void daemonize(void)
+{
+        if (isattached())
+        {
+                int i = fork();
+
+                // Exit our parent process.
+                if (i > 0)
+                        exit(EXIT_SUCCESS);
+
+                // Say our PID to the console.
+                printf("Going away from console, pid: %d\n", getpid());
+
+                // Close all the file descriptors so printf and shit goes
+                // away. This can later be used for logging instead.
+                freopen("/dev/null", "r", stdin);
+                freopen("/dev/null", "w", stdout);
+                freopen("/dev/null", "w", stderr);
+
+                if (setpgid(0, 0) < 0)
+                        exit(EXIT_FAILURE);
+                else if (i == -1)
+                        exit(EXIT_FAILURE);
+        }
+}
+
 int main(int argc, const char *argv[])
 {
+	int nofork = 0;
 	// show help if no arguments are specified
 	if ((argc == 1) || (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)) {
 		printf(
@@ -167,7 +206,8 @@ int main(int argc, const char *argv[])
 			"Methods:\n"
 			"\t-x\tUse X.Org server to set keyboard LEDs.\n"
 			"\t-c\tUse TTY console interfact to set keyboard LEDs.\n"
-			"\t-t\tUse ThinkPad LEDs for notification.\n\n"
+			"\t-t\tUse ThinkPad LEDs for notification.\n"
+			"\t-f\tDo not fork to background.\n\n"
 			"X.Org parameters: [led]\n"
 			"\tnum\tUse NumLock\n"
 			"\tcap\tUse CapsLock\n"
@@ -182,6 +222,8 @@ int main(int argc, const char *argv[])
 			"\t0-15\n"
 		);
 		exit(EXIT_SUCCESS);
+	} else if ((strcmp(argv[1], "-f") == 0)) {
+		nofork = 1;
 	}
 
 	// register signal handler
@@ -196,6 +238,10 @@ int main(int argc, const char *argv[])
 		printf("Error initializing specified subsystem.\n");
 		exit(1);
 	}
+
+	// Fork to background
+	if (!nofork)
+		daemonize();
 
 	// start main loop
 	while (1) {
