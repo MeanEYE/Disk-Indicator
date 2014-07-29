@@ -12,6 +12,7 @@ sudo ./disk_indicator <method> [params]
        environment use this flag to avoid getting your LEDs reset.
 -c     Use standard TTY console interface to control LEDs.
 -t     Use ACPI to set LEDs on ThinkPad laptops.
+-f     Do not fork to background.
 
 X.Org params: [led]
 num    Use NumLock.
