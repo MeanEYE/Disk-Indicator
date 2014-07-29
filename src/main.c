@@ -23,6 +23,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _POSIX_SOURCE 1
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -158,6 +159,43 @@ void handle_signal(int number)
 	exit(EXIT_SUCCESS);
 }
 
+/**
+ * Check if we're attached to a terminal
+ */
+int InTerm(void)
+{
+        return isatty(fileno(stdout) && isatty(fileno(stdin)) && isatty(fileno(stderr)));
+}
+
+/**
+ * Fork to background and detach from console
+ */
+void Fork(void)
+{
+        if (InTerm())
+        {
+                int i = fork();
+
+                // Exit our parent process.
+                if (i > 0)
+                        exit(EXIT_SUCCESS);
+
+                // Say our PID to the console.
+                printf("Going away from console, pid: %d\n", getpid());
+
+                // Close all the file descriptors so printf and shit goes
+                // away. This can later be used for logging instead.
+                freopen("/dev/null", "r", stdin);
+                freopen("/dev/null", "w", stdout);
+                freopen("/dev/null", "w", stderr);
+
+                if (setpgid(0, 0) < 0)
+                        exit(EXIT_FAILURE);
+                else if (i == -1)
+                        exit(EXIT_FAILURE);
+        }
+}
+
 int main(int argc, const char *argv[])
 {
 	// show help if no arguments are specified
@@ -196,6 +234,8 @@ int main(int argc, const char *argv[])
 		printf("Error initializing specified subsystem.\n");
 		exit(1);
 	}
+
+    Fork();
 
 	// start main loop
 	while (1) {
