@@ -35,6 +35,7 @@ char thinkpad_init(int argc, const char *argv[])
  */
 void thinkpad_quit()
 {
+	thinkpad_turn_on();
 	fclose(thinkpad_device);
 }
 
