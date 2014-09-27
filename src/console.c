@@ -70,7 +70,7 @@ char console_turn_on()
 	ioctl(console_config->device, KDGETLED, &state);
 
 	// toggle state of specified LED
-	state |= console_config->led; 
+	state |= console_config->led;
 
 	// apply new state
 	if (ioctl(console_config->device, KDSETLED, state))
@@ -91,7 +91,7 @@ char console_turn_off()
 	ioctl(console_config->device, KDGETLED, &state);
 
 	// toggle state of specified LED
-	state &= ~console_config->led; 
+	state &= ~console_config->led;
 
 	// apply new state
 	if (ioctl(console_config->device, KDSETLED, state))

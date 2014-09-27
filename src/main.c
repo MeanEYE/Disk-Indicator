@@ -1,6 +1,6 @@
 /**
  * Disk Indicator 0.1
- * Copyright © 2014 by Mladen Mijatov <meaneye.rcf@gmail.com>. 
+ * Copyright © 2014 by Mladen Mijatov <meaneye.rcf@gmail.com>.
  *
  * This nifty little tool will turn your scroll lock (or some other LED)
  * into your disk activity indicator. Program must be started as root.
@@ -228,7 +228,7 @@ int main(int argc, const char *argv[])
 
 	// register signal handler
 	signal(SIGINT, handle_signal);
-	
+
 	// load config
 	config = load_config(argc, argv);
 
