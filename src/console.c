@@ -23,7 +23,8 @@ char console_init(int argc, const char *argv[])
 
 	// default parameters
 	console_config->led = SCROLL_LOCK;
-	console_config->tty = strdup("/dev/");
+	console_config->tty[0] = '\0';
+	strcat(console_config->tty, "/dev/");
 
 	// parse parameters
 	if (argc > 0)

@@ -12,7 +12,7 @@ enum console_led {
 typedef struct {
 	int device;
 	enum console_led led;
-	char *tty;
+	char tty[100];
 } ConsoleConfig;
 
 ConsoleConfig *console_config;
