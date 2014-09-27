@@ -1,3 +1,6 @@
+# Project file
+disk_indicator
+
 # Object files
 *.o
 *.ko
