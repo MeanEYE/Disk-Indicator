@@ -160,45 +160,51 @@ void handle_signal(int number)
 }
 
 /**
- * Check if we're attached to a terminal
+ * Check if we're attached to a terminal.
  */
-int isattached(void)
+int is_attached(void)
 {
-        return isatty(fileno(stdout) && isatty(fileno(stdin)) && isatty(fileno(stderr)));
+	return isatty(
+		fileno(stdout) &&
+		isatty(fileno(stdin)) &&
+		isatty(fileno(stderr))
+	);
 }
 
 /**
- * Fork/daemonize to background and detach from console
+ * Daemonize to background and detach from console.
  */
 void daemonize(void)
 {
-        if (isattached())
-        {
-                int i = fork();
+	if (is_attached()) {
+		int i = fork();
 
-                // Exit our parent process.
-                if (i > 0)
-                        exit(EXIT_SUCCESS);
+		// exit our parent process
+		if (i > 0)
+			exit(EXIT_SUCCESS);
 
-                // Say our PID to the console.
-                printf("Going away from console, pid: %d\n", getpid());
+		// say our PID to the console
+		printf("Going away from console, pid: %d\n", getpid());
 
-                // Close all the file descriptors so printf and shit goes
-                // away. This can later be used for logging instead.
-                freopen("/dev/null", "r", stdin);
-                freopen("/dev/null", "w", stdout);
-                freopen("/dev/null", "w", stderr);
+		// close file descriptors
+		freopen("/dev/null", "r", stdin);
+		freopen("/dev/null", "w", stdout);
+		freopen("/dev/null", "w", stderr);
 
-                if (setpgid(0, 0) < 0)
-                        exit(EXIT_FAILURE);
-                else if (i == -1)
-                        exit(EXIT_FAILURE);
-        }
+		if (setpgid(0, 0) < 0)
+			exit(EXIT_FAILURE);
+		else if (i == -1)
+			exit(EXIT_FAILURE);
+	}
 }
 
+/**
+ * Main application loop.
+ */
 int main(int argc, const char *argv[])
 {
-	int nofork = 0;
+	int no_fork = 0;
+
 	// show help if no arguments are specified
 	if ((argc == 1) || (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)) {
 		printf(
@@ -222,8 +228,9 @@ int main(int argc, const char *argv[])
 			"\t0-15\n"
 		);
 		exit(EXIT_SUCCESS);
-	} else if ((strcmp(argv[1], "-f") == 0)) {
-		nofork = 1;
+
+	} else if (strcmp(argv[1], "-f") == 0) {
+		no_fork = 1;
 	}
 
 	// register signal handler
@@ -239,8 +246,8 @@ int main(int argc, const char *argv[])
 		exit(1);
 	}
 
-	// Fork to background
-	if (!nofork)
+	// fork to background
+	if (!no_fork)
 		daemonize();
 
 	// start main loop
