@@ -240,6 +240,7 @@ int main(int argc, const char *argv[])
 
 	// register signal handler
 	signal(SIGINT, handle_signal);
+	signal(SIGTERM, handle_signal);
 
 	// load config
 	config = load_config(argc, argv);
