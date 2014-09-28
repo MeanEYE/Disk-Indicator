@@ -1,6 +1,29 @@
 /**
+ * Disk Indicator 0.1
+ * Copyright © 2014 by Mladen Mijatov <meaneye.rcf@gmail.com>.
+ *
  * Support for notification using keyboard LEDs through
  * standard TTY interface.
+ *
+ * This nifty little tool will turn your scroll lock (or some other LED)
+ * into your disk activity indicator. Program must be started as root.
+ * It had very little overhead and almost no CPU usage.
+ *
+ * Original idea and some code by Dan Stahlke <dan@stahlke.org>. His
+ * source code can be found here: http://www.stahlke.org/dan/hdd_led/
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdio.h>
