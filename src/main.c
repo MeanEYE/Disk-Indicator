@@ -168,7 +168,7 @@ int is_attached(void)
 		fileno(stdout) &&
 		isatty(fileno(stdin)) &&
 		isatty(fileno(stderr))
-	);
+		);
 }
 
 /**
@@ -226,11 +226,16 @@ int main(int argc, const char *argv[])
 			"\tscr\tUse ScrollLock (default)\n\n"
 			"ThinkPad parameters: [led]\n"
 			"\t0-15\n"
-		);
+			);
 		exit(EXIT_SUCCESS);
 
 	} else if (strcmp(argv[1], "-f") == 0) {
+		// set forking flag
 		no_fork = 1;
+
+		// shift parameters
+		argc--;
+		argv++;
 	}
 
 	// register signal handler
