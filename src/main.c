@@ -211,8 +211,22 @@ void daemonize(void)
 		if (i > 0)
 			exit(EXIT_SUCCESS);
 
-		// say our PID to the console
-		printf("Going away from console, pid: %d\n", getpid());
+		// say our method and PID to the console
+		switch (config->method) {
+			case X_ORG:
+				printf("Using X.Org method.");
+				break;
+
+			case CONSOLE:
+				printf("Using TTY method.");
+				break;
+
+			case THINKPAD:
+				printf("Using Thinkpad LED method.");
+				break;
+		}
+
+		printf(" Going away from console, pid: %d\n", getpid());
 
 		// close file descriptors
 		freopen("/dev/null", "r", stdin);
@@ -234,7 +248,7 @@ int main(int argc, const char *argv[])
 	int no_fork = 0;
 
 	// show help if no arguments are specified
-	if ((argc == 1) || (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0)) {
+	if (argc > 1 && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
 		printf(
 			"Usage: disk_indicator <method> [parameters]\n"
 			"Methods:\n"
@@ -257,7 +271,9 @@ int main(int argc, const char *argv[])
 			);
 		exit(EXIT_SUCCESS);
 
-	} else if (strcmp(argv[1], "-f") == 0) {
+	}
+
+	if (argc > 1 && strcmp(argv[1], "-f") == 0) {
 		// set forking flag
 		no_fork = 1;
 
