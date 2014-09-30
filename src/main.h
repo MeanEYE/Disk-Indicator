@@ -3,6 +3,8 @@
 #ifndef MAIN_INCLUDED
 #define MAIN_INCLUDED
 
+#define FILENAME "/proc/diskstats"
+
 enum notify_method {
 	X_ORG,
 	CONSOLE,
@@ -13,6 +15,10 @@ typedef struct {
 	bool initialized;
 	enum notify_method method;
 
+	// statistics file handle
+	int stats_file;
+
+	// buffers
 	char *old_data, *new_data;
 
 	// pointer to functions used for notifying user
@@ -30,6 +36,8 @@ const unsigned int BUFFER_SIZE = 4096;
 
 Config *load_config(int argc, const char *argv[]);
 void unload_config(Config *config);
+bool open_stats_file();
+void close_stats_file();
 char set_keyboard_led(Config *config, unsigned char new_state);
 char get_led_state(Config *config, unsigned char *state);
 void get_disk_stats(void *data, unsigned int size);

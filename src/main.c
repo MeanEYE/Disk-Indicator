@@ -27,13 +27,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <sys/ioctl.h>
-#include <sys/fcntl.h>
-#include <linux/kd.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
 #include <X11/Xlib.h>
+#include <sys/ioctl.h>
+#include <linux/kd.h>
 
 #include "main.h"
 #include "xorg.h"
@@ -112,6 +112,9 @@ Config *load_config(int argc, const char *argv[])
  */
 void unload_config(Config *config)
 {
+	// close disk statistics file
+	close_stats_file();
+
 	// free memory taken by the buffer
 	free(config->old_data);
 	free(config->new_data);
@@ -136,18 +139,37 @@ void unload_config(Config *config)
 }
 
 /**
+ * Open disk statistics file.
+ */
+bool open_stats_file()
+{
+	bool result = true;
+
+	// open file
+	config->stats_file = open(FILENAME, O_RDONLY);
+	if (config->stats_file < 0) {
+		perror(FILENAME);
+		result = false;
+	}
+
+	return result;
+}
+
+/**
+ * Close disk statistics file.
+ */
+void close_stats_file()
+{
+	close(config->stats_file);
+}
+
+/**
  * Get content for disk statistics file.
  */
 void get_disk_stats(void *data, unsigned int size)
 {
-	FILE *handle;
-
-	// open file
-	handle = fopen("/proc/diskstats", "r");
-	fread(data, 1, size, handle);
-
-	// close file
-	fclose(handle);
+	lseek(config->stats_file, 0, SEEK_SET);
+	read(config->stats_file, data, size);
 }
 
 /**
@@ -250,6 +272,12 @@ int main(int argc, const char *argv[])
 		unload_config(config);
 		printf("Error initializing specified subsystem.\n");
 		exit(1);
+	}
+
+	// try opening disk statistics
+	if (open_stats_file() == false) {
+		unload_config(config);
+		exit(2);
 	}
 
 	// fork to background
