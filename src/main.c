@@ -65,14 +65,20 @@ Config *load_config(int argc, const char *argv[])
 	argv++;
 
 	// parse arguments
-	if (strncmp(argv[0], "-x", 2) == 0) {
+	if (argc > 0) {
+		if (strncmp(argv[0], "-x", 2) == 0) {
+			result->method = X_ORG;
+
+		} else if (strncmp(argv[0], "-c", 2) == 0) {
+			result->method = CONSOLE;
+
+		} else if (strncmp(argv[0], "-t", 2) == 0) {
+			result->method = THINKPAD;
+		}
+
+	} else {
+		// default method
 		result->method = X_ORG;
-
-	} else if (strncmp(argv[0], "-c", 2) == 0) {
-		result->method = CONSOLE;
-
-	} else if (strncmp(argv[0], "-t", 2) == 0) {
-		result->method = THINKPAD;
 	}
 
 	// shift parameters
