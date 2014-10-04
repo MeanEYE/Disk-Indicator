@@ -172,7 +172,7 @@ void close_stats_file()
 /**
  * Get content for disk statistics file.
  */
-void get_disk_stats(void *data, unsigned int size)
+void read_stats(void *data, unsigned int size)
 {
 	lseek(config->stats_file, 0, SEEK_SET);
 	read(config->stats_file, data, size);
@@ -308,11 +308,11 @@ int main(int argc, const char *argv[])
 
 	// start main loop
 	while (1) {
-		get_disk_stats(config->new_data, BUFFER_SIZE);
+		read_stats(config->new_data, BUFFER_SIZE);
 
 		while (memcmp(config->old_data, config->new_data, BUFFER_SIZE) != 0) {
 			memcpy(config->old_data, config->new_data, BUFFER_SIZE);
-			get_disk_stats(config->new_data, BUFFER_SIZE);
+			read_stats(config->new_data, BUFFER_SIZE);
 
 			// turn the light on
 			config->turn_notification_on();
