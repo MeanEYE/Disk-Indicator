@@ -204,40 +204,40 @@ int is_attached(void)
  */
 void daemonize(void)
 {
-	if (is_attached()) {
-		int i = fork();
+	if (!is_attached())
+		return;
 
-		// exit our parent process
-		if (i > 0)
-			exit(EXIT_SUCCESS);
+	// fork process
+	int pid = fork();
 
-		// say our method and PID to the console
-		switch (config->method) {
-			case X_ORG:
-				printf("Using X.Org method.");
-				break;
+	// exit our parent process
+	if (pid > 0)
+		exit(EXIT_SUCCESS);
 
-			case CONSOLE:
-				printf("Using TTY method.");
-				break;
+	// say our method and PID to the console
+	switch (config->method) {
+		case X_ORG:
+			printf("Using X.Org method.");
+			break;
 
-			case THINKPAD:
-				printf("Using Thinkpad LED method.");
-				break;
-		}
+		case CONSOLE:
+			printf("Using TTY method.");
+			break;
 
-		printf(" Going away from console, pid: %d\n", getpid());
-
-		// close file descriptors
-		freopen("/dev/null", "r", stdin);
-		freopen("/dev/null", "w", stdout);
-		freopen("/dev/null", "w", stderr);
-
-		if (setpgid(0, 0) < 0)
-			exit(EXIT_FAILURE);
-		else if (i == -1)
-			exit(EXIT_FAILURE);
+		case THINKPAD:
+			printf("Using Thinkpad LED method.");
+			break;
 	}
+
+	printf(" Going away from console, pid: %d\n", getpid());
+
+	// close file descriptors
+	freopen("/dev/null", "r", stdin);
+	freopen("/dev/null", "w", stdout);
+	freopen("/dev/null", "w", stderr);
+
+	if (setpgid(0, 0) < 0 || pid == -1)
+		exit(EXIT_FAILURE);
 }
 
 /**
@@ -270,7 +270,6 @@ int main(int argc, const char *argv[])
 			"\t0-15\n"
 			);
 		exit(EXIT_SUCCESS);
-
 	}
 
 	if (argc > 1 && strcmp(argv[1], "-f") == 0) {
