@@ -5,7 +5,7 @@ Small program for Linux that will turn your `Scroll`, `Caps` or `Num Lock` LED o
 
 ### Usage
 
-`./disk_indicator <method> [params]`
+`./disk_indicator [-f] <method> [params]`
 
 * `-x` Use X.Org for detecting keyboard flags. If you are using graphical desktop environment use this flag to avoid getting your LEDs reset.
 * `-c` Use standard TTY console interface to control LEDs.
