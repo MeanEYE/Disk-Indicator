@@ -36,41 +36,37 @@
 /**
  * Initialize X.Org display support.
  */
-char xorg_init(int argc, const char *argv[])
+bool xorg_init(Indicator *indicator, char *led)
 {
-	char result = 0;
-
 	// allocate memory to store config
-	xorg_config = malloc(sizeof(XOrgConfig));
+	XOrgConfig *xorg_config = calloc(1, sizeof(XOrgConfig));
+	indicator->config = (char *) xorg_config;
 
 	// open connection to display server
 	xorg_config->display = XOpenDisplay(NULL);
-	xorg_config->keyboard_state = malloc(sizeof(XKeyboardState));
+	xorg_config->keyboard_state = calloc(1, sizeof(XKeyboardState));
 	xorg_config->flag_bit = XORG_SCROLL_LOCK;
 
 	// parse additional parameters
-	while (argc > 0) {
-		if (strncmp(argv[0], "scr", 3) == 0) {
-			xorg_config->flag_bit = XORG_SCROLL_LOCK;
-		} else if (strncmp(argv[0], "num", 3) == 0) {
-			xorg_config->flag_bit = XORG_NUM_LOCK;
-		} else if (strncmp(argv[0], "cap", 3) == 0) {
-			xorg_config->flag_bit = XORG_CAPS_LOCK;
-		}
-
-		// shift parameters
-		argc--;
-		argv++;
+	if (strncmp(led, "scroll", 6) == 0) {
+		xorg_config->flag_bit = XORG_SCROLL_LOCK;
+	} else if (strncmp(led, "num", 3) == 0) {
+		xorg_config->flag_bit = XORG_NUM_LOCK;
+	} else if (strncmp(led, "caps", 4) == 0) {
+		xorg_config->flag_bit = XORG_CAPS_LOCK;
 	}
 
-	return result;
+	return true;
 }
 
 /**
  * Free memory taken by X.Org display support config.
  */
-void xorg_quit()
+void xorg_quit(Indicator *indicator)
 {
+	XOrgConfig *xorg_config = (XOrgConfig *) indicator->config;
+
+	XCloseDisplay(xorg_config->display);
 	free(xorg_config->keyboard_state);
 	free(xorg_config);
 }
@@ -78,11 +74,13 @@ void xorg_quit()
 /**
  * Turn keyboard LED on.
  */
-char xorg_turn_on()
+void xorg_turn_on(Indicator *indicator)
 {
-	char result = 0;
 	unsigned long led_mask;
 	XKeyboardControl values;
+
+	// get config
+	XOrgConfig *xorg_config = (XOrgConfig *) indicator->config;
 
 	// get current LED state
 	XGetKeyboardControl(xorg_config->display, xorg_config->keyboard_state);
@@ -101,17 +99,17 @@ char xorg_turn_on()
 
 	// get the state again to apply changes
 	XGetKeyboardControl(xorg_config->display, xorg_config->keyboard_state);
-
-	return result;
 }
 
 /**
  * Turn keyboard LED off.
  */
-char xorg_turn_off()
+void xorg_turn_off(Indicator *indicator)
 {
-	char result = 0;
 	XKeyboardControl values;
+
+	// get config
+	XOrgConfig *xorg_config = (XOrgConfig *) indicator->config;
 
 	// set new state
 	if (xorg_config->initial_state)
@@ -123,6 +121,4 @@ char xorg_turn_off()
 
 	// get the state again to apply changes
 	XGetKeyboardControl(xorg_config->display, xorg_config->keyboard_state);
-
-	return result;
 }

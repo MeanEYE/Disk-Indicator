@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <X11/Xlib.h>
+#include "shared.h"
 
 #ifndef XORG_INCLUDED
 #define XORG_INCLUDED
@@ -18,11 +19,9 @@ typedef struct {
 	enum xorg_led flag_bit;
 } XOrgConfig;
 
-XOrgConfig *xorg_config;
-
-char xorg_init(int argc, const char *argv[]);
-void xorg_quit();
-char xorg_turn_on();
-char xorg_turn_off();
+bool xorg_init(Indicator *indicator, char *led);
+void xorg_quit(Indicator *indicator);
+void xorg_turn_on();
+void xorg_turn_off();
 
 #endif
