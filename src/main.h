@@ -1,41 +1,41 @@
 #include <stdbool.h>
+#include "shared.h"
 
 #ifndef MAIN_INCLUDED
 #define MAIN_INCLUDED
 
 #define FILENAME "/proc/diskstats"
+#define STATS_FORMAT "%*d %*d %s %lu %*u %*u %*u %lu %*u %*u %*u %*u %*u %*u"
+#define CONFIG_FORMAT "led=%s event=%s device=%s"
 
-enum notify_method {
-	X_ORG,
-	CONSOLE,
-	THINKPAD
-};
 
 typedef struct {
 	bool initialized;
-	enum notify_method method;
 
 	// statistics file handle
 	int stats_file;
 
-	// buffers
-	char *old_data, *new_data;
-
-	// pointer to functions used for notifying user
-	char (*turn_notification_on)(void);
-	char (*turn_notification_off)(void);
+	// configured indicators
+	Indicator *indicators[20];
+	int indicator_count;
 
 	// timeouts measured in CPU cycles
 	int check_interval;
 	int power_on_interval;
 	int power_off_interval;
+
+	// method flags
+	bool xorg_initialized;
+	bool console_initialized;
+	bool thinkpad_initialized;
 } Config;
 
-static Config *config;
-const unsigned int BUFFER_SIZE = 4096;
+
+Config *config;
 
 Config *load_config(int argc, const char *argv[]);
 void unload_config(Config *config);
+unsigned int read_line(int file, char *line);
 bool open_stats_file();
 void close_stats_file();
 char set_keyboard_led(Config *config, unsigned char new_state);

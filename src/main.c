@@ -40,75 +40,130 @@
 #include "console.h"
 #include "thinkpad.h"
 
+char stat_device[20];
+unsigned long stat_read_count;
+unsigned long stat_write_count;
+
 /**
  * Create new configuration structure and populate
  * with default values if no arguments were passed.
  */
 Config *load_config(int argc, const char *argv[])
 {
-	Config *result = malloc(sizeof(Config));
-	char init_result = 0;
+	Config *result = calloc(1, sizeof(Config));
+	int config;
+	char config_file[4096] = {0};
+	char default_config_file[] = "~/.disk-indicator";
+
+	// set default values
+	result->xorg_initialized = false;
+	result->console_initialized = false;
+	result->thinkpad_initialized = false;
+
+	// get config file
+	if (argc > 0 && strcmp(argv[0], "-c") == 0) {
+		argc--;
+		argv++;
+
+		strcpy(config_file, argv[0]);
+
+	} else {
+		// use default config file
+		strcpy(config_file, default_config_file);
+	}
+
+	// load config file
+	config = open(config_file, O_RDONLY);
+	if (config < 0) {
+		perror(config_file);
+		goto _exit;
+	}
+
+	char led[20];
+	char device[20];
+	char event[6];
+	char line[128];
+
+	while (read_line(config, line) > 0) {
+		// parse line from config file
+		if (sscanf(line, CONFIG_FORMAT, led, event, device) < 3)
+			continue;
+
+		// make sure we don't go over our limit
+		if (result->indicator_count == 20) {
+			printf("Indicator limit (20) is reached, ignoring the rest of the config file.\n");
+			break;
+		}
+
+		// create new indicator
+		Indicator *indicator = calloc(1, sizeof(Indicator));
+
+		// store device name to indicator
+		indicator->device = calloc(1, strlen(device) + 1);
+		strcpy(indicator->device, device);
+
+		// assign function calls
+		switch (led[0]) {
+			case 'x':
+				indicator->method = X_ORG;
+				indicator->turn_notification_on = &xorg_turn_on;
+				indicator->turn_notification_off = &xorg_turn_off;
+
+				if (xorg_init(indicator, led + 2))
+					result->xorg_initialized = true;
+				break;
+
+			case 'c':
+				indicator->method = CONSOLE;
+				indicator->turn_notification_on = &console_turn_on;
+				indicator->turn_notification_off = &console_turn_on;
+				break;
+
+			case 't':
+				indicator->method = THINKPAD;
+				indicator->turn_notification_on = &thinkpad_turn_on;
+				indicator->turn_notification_off = &thinkpad_turn_on;
+				break;
+		}
+
+		// assign event type
+		if (strcmp(event, "read") == 0) {
+			indicator->event = READ;
+		} else if (strcmp(event, "write") == 0) {
+			indicator->event = WRITE;
+		} else {
+			indicator->event = BOTH;
+		}
+		printf(event);
+		printf("\n");
+
+		// reset counters
+		indicator->read_count = 0;
+		indicator->write_count = 0;
+
+		// store indicator
+		result->indicators[result->indicator_count] = indicator;
+		result->indicator_count++;
+	}
+
+	// close config file
+	close(config);
 
 	// default configuration
 	result->initialized = false;
-	result->method = X_ORG;
 	result->check_interval = 200000;
 	result->power_on_interval = 40000;
 	result->power_off_interval= 10000;
 
-	// allocate memory for comparison
-	result->old_data = (char *) calloc(1, BUFFER_SIZE);
-	result->new_data = (char *) calloc(1, BUFFER_SIZE);
+_exit:
+	// set config initialization result value
+	result->initialized = false;
+	result->initialized |= result->xorg_initialized;
+	result->initialized |= result->console_initialized;
+	result->initialized |= result->thinkpad_initialized;
 
-	// shift parameters as first param is just program executable
-	argc--;
-	argv++;
-
-	// parse arguments
-	if (argc > 0) {
-		if (strncmp(argv[0], "-x", 2) == 0) {
-			result->method = X_ORG;
-
-		} else if (strncmp(argv[0], "-c", 2) == 0) {
-			result->method = CONSOLE;
-
-		} else if (strncmp(argv[0], "-t", 2) == 0) {
-			result->method = THINKPAD;
-		}
-
-	} else {
-		// default method
-		result->method = X_ORG;
-	}
-
-	// shift parameters
-	argc--;
-	argv++;
-
-	// initialize specified subsystem
-	switch (result->method) {
-		case X_ORG:
-			init_result = xorg_init(argc, argv);
-			result->turn_notification_on = &xorg_turn_on;
-			result->turn_notification_off = &xorg_turn_off;
-			break;
-
-		case CONSOLE:
-			init_result = console_init(argc, argv);
-			result->turn_notification_on = &console_turn_on;
-			result->turn_notification_off = &console_turn_off;
-			break;
-
-		case THINKPAD:
-			init_result = thinkpad_init(argc, argv);
-			result->turn_notification_on = &thinkpad_turn_on;
-			result->turn_notification_off = &thinkpad_turn_off;
-			break;
-	}
-
-	// mark subsystem as initialized
-	if (init_result == 0)
-		result->initialized = true;
+	if (result->initialized)
+		printf("Loaded %d indicators.\n", result->indicator_count);
 
 	return result;
 }
@@ -121,27 +176,54 @@ void unload_config(Config *config)
 	// close disk statistics file
 	close_stats_file();
 
-	// free memory taken by the buffer
-	free(config->old_data);
-	free(config->new_data);
+	// free indicator memory
+	for (int i = 0; i < config->indicator_count; i++) {
+		Indicator *indicator = config->indicators[i];
 
-	// let subsystem clean up after themselves
-	if (config->initialized)
-		switch (config->method) {
+		// allow subsystems to clean up
+		switch (indicator->method) {
 			case X_ORG:
-				xorg_quit();
+				xorg_quit(indicator);
 				break;
 
 			case CONSOLE:
-				console_quit();
-				break;
-
 			case THINKPAD:
-				thinkpad_quit();
 				break;
 		}
 
+		free(config->indicators[i]->device);
+		free(config->indicators[i]);
+	}
+
 	free(config);
+}
+
+/**
+ * Read single line from specified file descriptor.
+ */
+unsigned int read_line(int file, char *line)
+{
+	int length = 0, read_count = 0;
+	char character[2];
+
+	while (true) {
+		read_count = read(file, character, 1);
+
+		// end of file
+		if (read_count == 0)
+			break;
+
+		// new line
+		if (character[0] == '\0' || character[0] == '\n')
+			break;
+
+		line[length] = character[0];
+		length += read_count;
+	}
+
+	line[length] = '\0';
+
+	return length;
 }
 
 /**
@@ -172,10 +254,24 @@ void close_stats_file()
 /**
  * Get content for disk statistics file.
  */
-void read_stats(void *data, unsigned int size)
+void read_stats(char *device, unsigned long *read_count, unsigned long *write_count)
 {
-	lseek(config->stats_file, 0, SEEK_SET);
-	read(config->stats_file, data, size);
+	char buff[200] = {0};
+	unsigned int count = read_line(config->stats_file, buff);
+
+	// go to beginning of the file
+	if (count == 0) {
+		lseek(config->stats_file, 0, SEEK_SET);
+
+		// let check indicators know we reached end of file
+		strcpy(device, "null");
+		read_count = 0;
+		write_count = 0;
+		return;
+	}
+
+	// parse line
+	sscanf(buff, STATS_FORMAT, device, read_count, write_count);
 }
 
 /**
@@ -214,21 +310,6 @@ void daemonize(void)
 	if (pid > 0)
 		exit(EXIT_SUCCESS);
 
-	// say our method and PID to the console
-	switch (config->method) {
-		case X_ORG:
-			printf("Using X.Org method.");
-			break;
-
-		case CONSOLE:
-			printf("Using TTY method.");
-			break;
-
-		case THINKPAD:
-			printf("Using Thinkpad LED method.");
-			break;
-	}
-
 	printf(" Going away from console, pid: %d\n", getpid());
 
 	// close file descriptors
@@ -241,38 +322,89 @@ void daemonize(void)
 }
 
 /**
+ * Check all indicators and return number of currently active ones.
+ */
+char check_indicators(void)
+{
+	char result = 0;
+	bool changed;
+
+	read_stats(stat_device, &stat_read_count, &stat_write_count);
+
+	while (strcmp(stat_device, "null") != 0) {
+		for (int i = 0; i < config->indicator_count; i++) {
+			Indicator *indicator = config->indicators[i];
+
+			// jump to next indicator
+			if (strcmp(stat_device, indicator->device) != 0)
+				continue;
+
+			// compare data
+			changed = false;
+
+			if (indicator->event == READ || indicator->event == BOTH)
+				changed |= stat_read_count != indicator->read_count;
+
+			if (indicator->event == WRITE || indicator->event == BOTH)
+				changed |= stat_write_count != indicator->write_count;
+
+			// store new data
+			indicator->read_count = stat_read_count;
+			indicator->write_count = stat_write_count;
+
+			// turn the light on
+			if (changed) {
+				indicator->turn_notification_on((char *) indicator);
+				usleep(config->power_on_interval);
+				printf("I: %s, %d, %lu %lu\n", indicator->device, indicator->event, indicator->read_count, indicator->write_count);
+
+				// turn it off
+				indicator->turn_notification_off((char *) indicator);
+				usleep(config->power_off_interval);
+
+				// increase result
+				result++;
+			}
+		}
+
+		// read stats again
+		read_stats(stat_device, &stat_read_count, &stat_write_count);
+	}
+	printf("Came!\n");
+
+	return result;
+}
+
+/**
  * Main application loop.
  */
 int main(int argc, const char *argv[])
 {
 	int no_fork = 0;
 
+	// shift arguments, first is just program executable
+	argc--;
+	argv++;
+
 	// show help if no arguments are specified
-	if (argc > 1 && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
+	if (argc > 0 && ((strcmp(argv[0], "-h") == 0) || (strcmp(argv[0], "--help") == 0))) {
 		printf(
-			"Usage: disk_indicator <method> [parameters]\n"
-			"Methods:\n"
-			"\t-x\tUse X.Org server to set keyboard LEDs.\n"
-			"\t-c\tUse TTY console interfact to set keyboard LEDs.\n"
-			"\t-t\tUse ThinkPad LEDs for notification.\n"
+			"Usage: disk_indicator [-f] [-c config.file]\n"
+			"\t-c\tLoad specified config. (default: ~/.disk-indicator)\n"
 			"\t-f\tDo not fork to background.\n\n"
-			"X.Org parameters: [led]\n"
-			"\tnum\tUse NumLock\n"
-			"\tcap\tUse CapsLock\n"
-			"\tscr\tUse ScrollLock (default)\n\n"
-			"TTY console parameters: [device [led]]\n"
-			"\ttty[1-9]\n"
-			"\tconsole\t(default)\n\n"
-			"\tnum\tUse NumLock\n"
-			"\tcap\tUse CapsLock\n"
-			"\tscr\tUse ScrollLock (default)\n\n"
-			"ThinkPad parameters: [led]\n"
-			"\t0-15\n"
+			"Sample config file:\n"
+			"\tled=t|0 event=read device=sda\n"
+			"\tled=x|caps event=write device=sda\n"
+			"\tled=x|scroll event=both device=sda1\n\n"
+			"Config params:\n"
+			"\tled=<provider>|<name>\tProvider: t, c, x\tName: 0-15, caps, scroll, num\n"
+			"\tevent=<type>\t\tType: read, write, both\n"
+			"\tdevice=<name>\t\tName: eg. sda1, sda, mmcblkp1\n\n"
 			);
 		exit(EXIT_SUCCESS);
 	}
 
-	if (argc > 1 && strcmp(argv[1], "-f") == 0) {
+	if (argc > 0 && strcmp(argv[0], "-f") == 0) {
 		// set forking flag
 		no_fork = 1;
 
@@ -291,7 +423,7 @@ int main(int argc, const char *argv[])
 	// check if config was successfully initialized
 	if (!config->initialized) {
 		unload_config(config);
-		printf("Error initializing specified subsystem.\n");
+		printf("Error loading configuration file.\n");
 		exit(1);
 	}
 
@@ -307,22 +439,8 @@ int main(int argc, const char *argv[])
 
 	// start main loop
 	while (1) {
-		read_stats(config->new_data, BUFFER_SIZE);
-
-		while (memcmp(config->old_data, config->new_data, BUFFER_SIZE) != 0) {
-			memcpy(config->old_data, config->new_data, BUFFER_SIZE);
-			read_stats(config->new_data, BUFFER_SIZE);
-
-			// turn the light on
-			config->turn_notification_on();
-			usleep(config->power_on_interval);
-
-			// turn it off
-			config->turn_notification_off();
-			usleep(config->power_off_interval);
-		}
-
-		usleep(config->check_interval);
+		if (check_indicators() == 0)
+			usleep(config->check_interval);
 	}
 
 	unload_config(config);
