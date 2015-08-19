@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
@@ -37,47 +38,40 @@
 /**
  * Initialize keyboard LED notification through TTY.
  */
-char console_init(int argc, const char *argv[])
+void console_init(Indicator *indicator, char *device)
 {
-	char result = 0;
-
 	// allocate memory for configuration structure
-	console_config = malloc(sizeof(ConsoleConfig));
+	ConsoleConfig *console_config = malloc(sizeof(ConsoleConfig));
+	indicator->config = (char *) console_config;
 
 	// default parameters
 	console_config->led = SCROLL_LOCK;
 	console_config->tty[0] = '\0';
 	strcat(console_config->tty, "/dev/");
 
-	// parse parameters
-	if (argc > 0)
-		strcat(console_config->tty, argv[0]); else
-		strcat(console_config->tty, "console");
-
-	if (argc == 2) {
-		if (strncmp(argv[1], "scr", 3) == 0) {
-			console_config->led = SCROLL_LOCK;
-		} else if (strncmp(argv[1], "num", 3) == 0) {
-			console_config->led = NUM_LOCK;
-		} else if (strncmp(argv[1], "cap", 3) == 0) {
-			console_config->led = CAPS_LOCK;
-		}
+	if (strncmp(device, "scroll", 6) == 0) {
+		console_config->led = SCROLL_LOCK;
+	} else if (strncmp(device, "num", 3) == 0) {
+		console_config->led = NUM_LOCK;
+	} else if (strncmp(device, "caps", 4) == 0) {
+		console_config->led = CAPS_LOCK;
 	}
 
 	// open console interface
 	console_config->device = open(console_config->tty, O_RDWR);
 
 	if (console_config->device == -1)
-		result = -1;
-
-	return result;
+		indicator->initialized = false; else
+		indicator->initialized = true;
 }
 
 /**
  * Clean up after us.
  */
-void console_quit()
+void console_quit(Indicator *indicator)
 {
+	ConsoleConfig *console_config = (ConsoleConfig *) indicator->config;
+
 	close(console_config->device);
 	free(console_config);
 }
@@ -85,10 +79,10 @@ void console_quit()
 /**
  * Turn keyboard LED on.
  */
-char console_turn_on()
+void console_turn_on(Indicator *indicator)
 {
-	char result = 0;
 	unsigned char state = 0;
+	ConsoleConfig *console_config = (ConsoleConfig *) indicator->config;
 
 	// get current state
 	ioctl(console_config->device, KDGETLED, &state);
@@ -97,19 +91,16 @@ char console_turn_on()
 	state |= console_config->led;
 
 	// apply new state
-	if (ioctl(console_config->device, KDSETLED, state))
-		result = -1;
-
-	return result;
+	ioctl(console_config->device, KDSETLED, state);
 }
 
 /**
  * Turn keyboard LED off.
  */
-char console_turn_off()
+void console_turn_off(Indicator *indicator)
 {
-	char result = 0;
 	unsigned char state;
+	ConsoleConfig *console_config = (ConsoleConfig *) indicator->config;
 
 	// get current state
 	ioctl(console_config->device, KDGETLED, &state);
@@ -118,8 +109,5 @@ char console_turn_off()
 	state &= ~console_config->led;
 
 	// apply new state
-	if (ioctl(console_config->device, KDSETLED, state))
-		result = -1;
-
-	return result;
+	ioctl(console_config->device, KDSETLED, state);
 }

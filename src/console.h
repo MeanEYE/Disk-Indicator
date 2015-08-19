@@ -1,4 +1,5 @@
 #include <linux/kd.h>
+#include "shared.h"
 
 #ifndef CONSOLE_INCLUDED
 #define CONSOLE_INCLUDED
@@ -15,11 +16,10 @@ typedef struct {
 	char tty[100];
 } ConsoleConfig;
 
-ConsoleConfig *console_config;
 
-char console_init(int argc, const char *argv[]);
+void console_init(Indicator *indicator, char *device);
 void console_quit();
-char console_turn_on();
-char console_turn_off();
+void console_turn_on();
+void console_turn_off();
 
 #endif
