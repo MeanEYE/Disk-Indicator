@@ -109,8 +109,8 @@ Config *load_config(int argc, const char *argv[])
 				indicator->turn_notification_on = &xorg_turn_on;
 				indicator->turn_notification_off = &xorg_turn_off;
 
-				if (xorg_init(indicator, led + 2))
-					result->xorg_initialized = true;
+				xorg_init(indicator, led + 2);
+				result->xorg_initialized |= indicator->initialized;
 				break;
 
 			case 'c':
@@ -134,8 +134,6 @@ Config *load_config(int argc, const char *argv[])
 		} else {
 			indicator->event = BOTH;
 		}
-		printf(event);
-		printf("\n");
 
 		// reset counters
 		indicator->read_count = 0;

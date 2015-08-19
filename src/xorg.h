@@ -19,7 +19,8 @@ typedef struct {
 	enum xorg_led flag_bit;
 } XOrgConfig;
 
-bool xorg_init(Indicator *indicator, char *led);
+
+void xorg_init(Indicator *indicator, char *led);
 void xorg_quit(Indicator *indicator);
 void xorg_turn_on();
 void xorg_turn_off();

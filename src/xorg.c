@@ -29,6 +29,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <X11/Xlib.h>
 #include "xorg.h"
@@ -36,7 +37,7 @@
 /**
  * Initialize X.Org display support.
  */
-bool xorg_init(Indicator *indicator, char *led)
+void xorg_init(Indicator *indicator, char *led)
 {
 	// allocate memory to store config
 	XOrgConfig *xorg_config = calloc(1, sizeof(XOrgConfig));
@@ -56,7 +57,8 @@ bool xorg_init(Indicator *indicator, char *led)
 		xorg_config->flag_bit = XORG_CAPS_LOCK;
 	}
 
-	return true;
+	// mark indicator as initialized
+	indicator->initialized = true;
 }
 
 /**

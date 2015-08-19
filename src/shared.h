@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 #ifndef SHARED_INCLUDED
 #define SHARED_INCLUDED
 
@@ -14,6 +16,7 @@ enum indicator_event {
 };
 
 typedef struct {
+	bool initialized;
 	enum notify_method method;
 	enum indicator_event event;
 	char *device;
