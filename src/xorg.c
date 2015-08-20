@@ -1,6 +1,6 @@
 /**
- * Disk Indicator 0.1
- * Copyright © 2014 by Mladen Mijatov <meaneye.rcf@gmail.com>.
+ * Disk Indicator 0.2
+ * Copyright © 2015. by Mladen Mijatov <meaneye.rcf@gmail.com>.
  *
  * Support for notifications by keyboard light through
  * X.Org display server. This is a prefered method for
