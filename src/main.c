@@ -1,6 +1,6 @@
 /**
- * Disk Indicator 0.1
- * Copyright © 2014 by Mladen Mijatov <meaneye.rcf@gmail.com>.
+ * Disk Indicator 0.2
+ * Copyright © 2015. by Mladen Mijatov <meaneye.rcf@gmail.com>.
  *
  * This nifty little tool will turn your scroll lock (or some other LED)
  * into your disk activity indicator. Program must be started as root.
@@ -116,13 +116,19 @@ Config *load_config(int argc, const char *argv[])
 			case 'c':
 				indicator->method = CONSOLE;
 				indicator->turn_notification_on = &console_turn_on;
-				indicator->turn_notification_off = &console_turn_on;
+				indicator->turn_notification_off = &console_turn_off;
+
+				console_init(indicator, led + 2);
+				result->console_initialized |= indicator->initialized;
 				break;
 
 			case 't':
 				indicator->method = THINKPAD;
 				indicator->turn_notification_on = &thinkpad_turn_on;
-				indicator->turn_notification_off = &thinkpad_turn_on;
+				indicator->turn_notification_off = &thinkpad_turn_off;
+
+				thinkpad_init(indicator, led + 2);
+				result->thinkpad_initialized |= indicator->initialized;
 				break;
 		}
 
@@ -352,12 +358,11 @@ char check_indicators(void)
 
 			// turn the light on
 			if (changed) {
-				indicator->turn_notification_on((char *) indicator);
+				indicator->turn_notification_on(indicator);
 				usleep(config->power_on_interval);
-				printf("I: %s, %d, %lu %lu\n", indicator->device, indicator->event, indicator->read_count, indicator->write_count);
 
 				// turn it off
-				indicator->turn_notification_off((char *) indicator);
+				indicator->turn_notification_off(indicator);
 				usleep(config->power_off_interval);
 
 				// increase result
@@ -368,7 +373,6 @@ char check_indicators(void)
 		// read stats again
 		read_stats(stat_device, &stat_read_count, &stat_write_count);
 	}
-	printf("Came!\n");
 
 	return result;
 }
@@ -392,7 +396,7 @@ int main(int argc, const char *argv[])
 			"\t-f\tDo not fork to background.\n\n"
 			"Sample config file:\n"
 			"\tled=t|0 event=read device=sda\n"
-			"\tled=x|caps event=write device=sda\n"
+			"\tled=c|tty1|caps event=write device=sda\n"
 			"\tled=x|scroll event=both device=sda1\n\n"
 			"Config params:\n"
 			"\tled=<provider>|<name>\tProvider: t, c, x\tName: 0-15, caps, scroll, num\n"
