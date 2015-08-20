@@ -15,15 +15,15 @@ enum indicator_event {
 	BOTH
 };
 
-typedef struct {
+typedef struct Indicator {
 	bool initialized;
 	enum notify_method method;
 	enum indicator_event event;
 	char *device;
 
 	// pointer to functions used for notifying user
-	void (*turn_notification_on)(char *indicator);
-	void (*turn_notification_off)(char *indicator);
+	void (*turn_notification_on)(struct Indicator *indicator);
+	void (*turn_notification_off)(struct Indicator *indicator);
 
 	// pointer to method config
 	char *config;
