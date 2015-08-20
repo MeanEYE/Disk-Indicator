@@ -18,6 +18,8 @@ led=x|scroll event=both device=sda1
 ```
 
 #### Config params:
-- `led=<provider>|<name>` - Provider: `t`, `c`, `x` - Name: `0-15`, `caps`, `scroll`, `num`
+- `led=<provider>|<name>`
+	- Provider: Thinkpad (`t`), Console (`c`), XOrg (`x`)
+	- Name: `0-15` (only Thinkpad provider), `caps`, `scroll`, `num`
 - `event=<type>` - Type: `read`, `write`, `both`
 - `device=<name>` - Name: eg. `sda1`, `sda`, `mmcblkp1`
