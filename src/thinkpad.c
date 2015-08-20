@@ -1,6 +1,6 @@
 /**
- * Disk Indicator 0.1
- * Copyright © 2014 by Mladen Mijatov <meaneye.rcf@gmail.com>.
+ * Disk Indicator 0.2
+ * Copyright © 2015. by Mladen Mijatov <meaneye.rcf@gmail.com>.
  *
  * Support for notifications using ThinkPad LEDs.
  *
@@ -28,70 +28,73 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "thinkpad.h"
+#include "shared.h"
+
 
 /**
  * Initialize ThinkPad notification support.
  */
-char thinkpad_init(int argc, const char *argv[])
+void thinkpad_init(Indicator *indicator, char *led)
 {
-	char result = 0;
+	// allocate memory for configuration structure
+	ThinkpadConfig *thinkpad_config = calloc(1, sizeof(ThinkpadConfig));
+	indicator->config = (char *) thinkpad_config;
 
 	// default config
-	thinkpad_led = "0";
-
-	// parse parameters
-	if (argc > 0)
-		thinkpad_led = (char*) strdup(argv[0]);
+	thinkpad_config->led = calloc(1, strlen(led) + 1);
+	strcpy(thinkpad_config->led, led);
 
 	// open acpi device
-	thinkpad_device = fopen("/proc/acpi/ibm/led", "w");
+	thinkpad_config->device = open(THINKPAD_ACPI_DEVICE, O_RDONLY);
 
-	if (!thinkpad_device)
-		result = -1;
-
-	return result;
+	if (!thinkpad_config->device)
+		indicator->initialized = false; else
+		indicator->initialized = true;
 }
 
 /**
  * Free memory taken by ThinkPad notification support config.
  */
-void thinkpad_quit()
+void thinkpad_quit(Indicator *indicator)
 {
-	thinkpad_turn_on();
-	fclose(thinkpad_device);
+	ThinkpadConfig *thinkpad_config = (ThinkpadConfig *) indicator->config;
+
+	// free device
+	if (indicator->initialized) {
+		indicator->turn_notification_on(indicator);
+		close(thinkpad_config->device);
+	}
+
+	// free memory
+	free(thinkpad_config->led);
+	free(thinkpad_config);
 }
 
 /**
  * Turn ThinkPad light on.
  */
-char thinkpad_turn_on()
+void thinkpad_turn_on(Indicator *indicator)
 {
-	char result = 0;
+	ThinkpadConfig *thinkpad_config = (ThinkpadConfig *) indicator->config;
 
 	// set new state
-	fputs(thinkpad_led, thinkpad_device);
-	fputs(" on\n", thinkpad_device);
-
-	// flush to apply
-	fflush(thinkpad_device);
-
-	return result;
+	write(thinkpad_config->device, thinkpad_config->led, strlen(thinkpad_config->led));
+	write(thinkpad_config->device, " on\n", 4);
+	fsync(thinkpad_config->device);
 }
 
 /**
  * Turn ThinkPad light off.
  */
-char thinkpad_turn_off()
+void thinkpad_turn_off(Indicator *indicator)
 {
-	char result = 0;
+	ThinkpadConfig *thinkpad_config = (ThinkpadConfig *) indicator->config;
 
 	// set new state
-	fputs(thinkpad_led, thinkpad_device);
-	fputs(" off\n", thinkpad_device);
-
-	// flush to apply
-	fflush(thinkpad_device);
-
-	return result;
+	write(thinkpad_config->device, thinkpad_config->led, strlen(thinkpad_config->led));
+	write(thinkpad_config->device, " off\n", 5);
+	fsync(thinkpad_config->device);
 }

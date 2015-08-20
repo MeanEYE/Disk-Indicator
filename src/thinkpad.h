@@ -1,12 +1,19 @@
+#include "shared.h"
+
 #ifndef THINKPAD_INCLUDED
 #define THINKPAD_INCLUDED
 
-char *thinkpad_led;
-FILE *thinkpad_device;
+#define THINKPAD_ACPI_DEVICE "/proc/acpi/ibm/led"
 
-char thinkpad_init(int argc, const char *argv[]);
-void thinkpad_quit();
-char thinkpad_turn_on();
-char thinkpad_turn_off();
+typedef struct {
+	char *led;
+	int device;
+} ThinkpadConfig;
+
+
+void thinkpad_init(Indicator *indicator, char *led);
+void thinkpad_quit(Indicator *indicator);
+void thinkpad_turn_on(Indicator *indicator);
+void thinkpad_turn_off(Indicator *indicator);
 
 #endif
