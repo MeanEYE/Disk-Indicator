@@ -190,7 +190,11 @@ void unload_config(Config *config)
 				break;
 
 			case CONSOLE:
+				console_quit(indicator);
+				break;
+
 			case THINKPAD:
+				thinkpad_quit(indicator);
 				break;
 		}
 
