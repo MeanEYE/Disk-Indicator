@@ -1,6 +1,6 @@
 /**
- * Disk Indicator 0.1
- * Copyright © 2014 by Mladen Mijatov <meaneye.rcf@gmail.com>.
+ * Disk Indicator 0.2
+ * Copyright © 2015. by Mladen Mijatov <meaneye.rcf@gmail.com>.
  *
  * Support for notification using keyboard LEDs through
  * standard TTY interface.
@@ -38,22 +38,29 @@
 /**
  * Initialize keyboard LED notification through TTY.
  */
-void console_init(Indicator *indicator, char *device)
+void console_init(Indicator *indicator, char *config)
 {
 	// allocate memory for configuration structure
 	ConsoleConfig *console_config = malloc(sizeof(ConsoleConfig));
 	indicator->config = (char *) console_config;
 
-	// default parameters
-	console_config->led = SCROLL_LOCK;
+	// parse config
+	char device[10] = {0};
+	char led[10] = {0};
+
+	// get tty device
 	console_config->tty[0] = '\0';
 	strcat(console_config->tty, "/dev/");
+	if (sscanf(config, XORG_CONFIG_FORMAT, device, led) == 2)
+		strcat(console_config->tty, device); else
+		strcat(console_config->tty, "console");
 
-	if (strncmp(device, "scroll", 6) == 0) {
+	// get led id
+	if (strcmp(led, "scroll") == 0) {
 		console_config->led = SCROLL_LOCK;
-	} else if (strncmp(device, "num", 3) == 0) {
+	} else if (strcmp(led, "num") == 0) {
 		console_config->led = NUM_LOCK;
-	} else if (strncmp(device, "caps", 4) == 0) {
+	} else {
 		console_config->led = CAPS_LOCK;
 	}
 
@@ -72,7 +79,8 @@ void console_quit(Indicator *indicator)
 {
 	ConsoleConfig *console_config = (ConsoleConfig *) indicator->config;
 
-	close(console_config->device);
+	if (indicator->initialized)
+		close(console_config->device);
 	free(console_config);
 }
 
@@ -81,7 +89,7 @@ void console_quit(Indicator *indicator)
  */
 void console_turn_on(Indicator *indicator)
 {
-	unsigned char state = 0;
+	unsigned char state;
 	ConsoleConfig *console_config = (ConsoleConfig *) indicator->config;
 
 	// get current state

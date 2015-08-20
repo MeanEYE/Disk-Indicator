@@ -4,11 +4,14 @@
 #ifndef CONSOLE_INCLUDED
 #define CONSOLE_INCLUDED
 
+#define XORG_CONFIG_FORMAT "%[^|]|%s"
+
 enum console_led {
 	SCROLL_LOCK = LED_SCR,
 	NUM_LOCK = LED_NUM,
 	CAPS_LOCK = LED_CAP
 };
+
 
 typedef struct {
 	int device;
@@ -17,9 +20,9 @@ typedef struct {
 } ConsoleConfig;
 
 
-void console_init(Indicator *indicator, char *device);
-void console_quit();
-void console_turn_on();
-void console_turn_off();
+void console_init(Indicator *indicator, char *config);
+void console_quit(Indicator *indicator);
+void console_turn_on(Indicator *indicator);
+void console_turn_off(Indicator *indicator);
 
 #endif
