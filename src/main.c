@@ -20,8 +20,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 #define _POSIX_C_SOURCE 1
 #include <stdio.h>
@@ -314,7 +313,7 @@ void daemonize(void)
 	if (pid > 0)
 		exit(EXIT_SUCCESS);
 
-	printf(" Going away from console, pid: %d\n", getpid());
+	printf("Going away from console, pid: %d\n", getpid());
 
 	// close file descriptors
 	freopen("/dev/null", "r", stdin);
