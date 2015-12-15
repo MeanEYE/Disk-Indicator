@@ -153,7 +153,6 @@ Config *load_config(int argc, const char *argv[])
 	close(config);
 
 	// default configuration
-	result->initialized = false;
 	result->check_interval = 200000;
 	result->power_on_interval = 40000;
 	result->power_off_interval= 10000;
@@ -255,7 +254,8 @@ bool open_stats_file()
  */
 void close_stats_file()
 {
-	close(config->stats_file);
+	if (config->stats_file)
+		close(config->stats_file);
 }
 
 /**
