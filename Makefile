@@ -4,6 +4,7 @@ LINK_FLAGS=-lm -lX11
 COMPILE_FLAGS=-Wall -pedantic -Werror -D _DEFAULT_SOURCE
 OBJECTS=xorg.o console.o thinkpad.o main.o
 
+
 all: $(PROJECT)
 
 debug: COMPILE_FLAGS += -g
@@ -16,4 +17,4 @@ $(PROJECT): $(OBJECTS)
 	$(COMPILER) $(OBJECTS) $(LINK_FLAGS) -o $(PROJECT)
 
 clean:
-	rm $(PROJECT) *.o
+	$(RM) $(PROJECT) *.o
