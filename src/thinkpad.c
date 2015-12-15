@@ -30,8 +30,8 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+
 #include "thinkpad.h"
-#include "shared.h"
 
 
 /**

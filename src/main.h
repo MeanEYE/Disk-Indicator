@@ -1,8 +1,8 @@
-#include <stdbool.h>
-#include "shared.h"
-
 #ifndef MAIN_INCLUDED
 #define MAIN_INCLUDED
+
+#include <stdbool.h>
+#include "shared.h"
 
 #define FILENAME "/proc/diskstats"
 #define STATS_FORMAT "%*d %*d %s %lu %*u %*u %*u %lu %*u %*u %*u %*u %*u %*u"

@@ -1,9 +1,10 @@
-#include "shared.h"
-
 #ifndef THINKPAD_INCLUDED
 #define THINKPAD_INCLUDED
 
+#include "shared.h"
+
 #define THINKPAD_ACPI_DEVICE "/proc/acpi/ibm/led"
+
 
 typedef struct {
 	char *led;

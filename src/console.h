@@ -1,10 +1,11 @@
-#include <linux/kd.h>
-#include "shared.h"
-
 #ifndef CONSOLE_INCLUDED
 #define CONSOLE_INCLUDED
 
+#include <linux/kd.h>
+#include "shared.h"
+
 #define XORG_CONFIG_FORMAT "%[^|]|%s"
+
 
 enum console_led {
 	SCROLL_LOCK = LED_SCR,

@@ -1,15 +1,17 @@
+#ifndef XORG_INCLUDED
+#define XORG_INCLUDED
+
 #include <stdbool.h>
 #include <X11/Xlib.h>
 #include "shared.h"
 
-#ifndef XORG_INCLUDED
-#define XORG_INCLUDED
 
 enum xorg_led {
 	XORG_CAPS_LOCK = 1,
 	XORG_NUM_LOCK = 2,
 	XORG_SCROLL_LOCK = 3
 };
+
 
 typedef struct {
 	Display *display;

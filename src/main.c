@@ -30,9 +30,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
-#include <X11/Xlib.h>
 #include <sys/ioctl.h>
-#include <linux/kd.h>
 
 #include "main.h"
 #include "xorg.h"
