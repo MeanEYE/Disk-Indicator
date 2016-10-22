@@ -1,5 +1,4 @@
-#ifndef THINKPAD_INCLUDED
-#define THINKPAD_INCLUDED
+#pragma once
 
 #include "shared.h"
 
@@ -16,5 +15,3 @@ void thinkpad_init(Indicator *indicator, char *led);
 void thinkpad_quit(Indicator *indicator);
 void thinkpad_turn_on(Indicator *indicator);
 void thinkpad_turn_off(Indicator *indicator);
-
-#endif

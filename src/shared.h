@@ -1,7 +1,6 @@
+#pragma once
 #include <stdbool.h>
 
-#ifndef SHARED_INCLUDED
-#define SHARED_INCLUDED
 
 enum notify_method {
 	X_ORG,
@@ -32,5 +31,3 @@ typedef struct Indicator {
 	unsigned long read_count;
 	unsigned long write_count;
 } Indicator;
-
-#endif

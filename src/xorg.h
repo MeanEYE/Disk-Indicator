@@ -1,5 +1,4 @@
-#ifndef XORG_INCLUDED
-#define XORG_INCLUDED
+#pragma once
 
 #include <stdbool.h>
 #include <X11/Xlib.h>
@@ -26,5 +25,3 @@ void xorg_init(Indicator *indicator, char *led);
 void xorg_quit(Indicator *indicator);
 void xorg_turn_on(Indicator *indicator);
 void xorg_turn_off(Indicator *indicator);
-
-#endif

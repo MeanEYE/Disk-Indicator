@@ -1,5 +1,4 @@
-#ifndef CONSOLE_INCLUDED
-#define CONSOLE_INCLUDED
+#pragma once
 
 #include <linux/kd.h>
 #include "shared.h"
@@ -25,5 +24,3 @@ void console_init(Indicator *indicator, char *config);
 void console_quit(Indicator *indicator);
 void console_turn_on(Indicator *indicator);
 void console_turn_off(Indicator *indicator);
-
-#endif

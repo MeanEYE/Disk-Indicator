@@ -1,5 +1,4 @@
-#ifndef MAIN_INCLUDED
-#define MAIN_INCLUDED
+#pragma once
 
 #include <stdbool.h>
 #include "shared.h"
@@ -41,5 +40,3 @@ void close_stats_file();
 char set_keyboard_led(Config *config, unsigned char new_state);
 char get_led_state(Config *config, unsigned char *state);
 void get_disk_stats(void *data, unsigned int size);
-
-#endif
