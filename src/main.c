@@ -282,7 +282,7 @@ void read_stats(char *device, unsigned long *read_count, unsigned long *write_co
 /**
  * Handle external signals.
  */
-void handle_signal(int number)
+void handle_signal()
 {
 	unload_config(config);
 	exit(EXIT_SUCCESS);
