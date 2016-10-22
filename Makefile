@@ -1,7 +1,7 @@
 PROJECT=disk_indicator
 COMPILER=c99
 LINK_FLAGS=-lm -lX11
-COMPILE_FLAGS=-Wall -Wextra -pedantic -Werror -D _DEFAULT_SOURCE -O2
+COMPILE_FLAGS=-Wall -Wextra -pedantic -Werror -D _DEFAULT_SOURCE -O2 -march=native
 OBJECTS=xorg.o console.o thinkpad.o main.o
 
 
