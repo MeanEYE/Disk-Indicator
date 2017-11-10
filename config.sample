@@ -1,1 +1,2 @@
 led=x|scroll event=both device=sdb
+led=x|caps event=both device=sda
