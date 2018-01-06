@@ -1,9 +1,10 @@
 #pragma once
+#define CONSOLE_AVAILABLE
 
 #include <linux/kd.h>
 #include "shared.h"
 
-#define XORG_CONFIG_FORMAT "%[^|]|%s"
+#define CONSOLE_CONFIG_FORMAT "%[^|]|%s"
 
 
 enum console_led {

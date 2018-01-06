@@ -1,6 +1,6 @@
 /**
- * Disk Indicator 0.2
- * Copyright © 2015. by Mladen Mijatov <meaneye.rcf@gmail.com>.
+ * Disk Indicator 0.3
+ * Copyright © 2017. by Mladen Mijatov <meaneye.rcf@gmail.com>.
  *
  * This nifty little tool will turn your scroll lock (or some other LED)
  * into your disk activity indicator. Program must be started as root.
@@ -20,7 +20,10 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+ * along with this program.
+ *
+ * If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #define _POSIX_C_SOURCE 1
 #include <stdio.h>
@@ -33,9 +36,7 @@
 #include <sys/ioctl.h>
 
 #include "main.h"
-#include "xorg.h"
-#include "console.h"
-#include "thinkpad.h"
+#include "../build/dependencies.h"
 
 char stat_device[20];
 unsigned long stat_read_count;
@@ -102,30 +103,36 @@ Config *load_config(int argc, const char *argv[])
 		// assign function calls
 		switch (led[0]) {
 			case 'x':
+#ifdef XORG_AVAILABLE
 				indicator->method = X_ORG;
 				indicator->turn_notification_on = &xorg_turn_on;
 				indicator->turn_notification_off = &xorg_turn_off;
 
 				xorg_init(indicator, led + 2);
 				result->xorg_initialized |= indicator->initialized;
+#endif
 				break;
 
 			case 'c':
+#ifdef CONSOLE_AVAILABLE
 				indicator->method = CONSOLE;
 				indicator->turn_notification_on = &console_turn_on;
 				indicator->turn_notification_off = &console_turn_off;
 
 				console_init(indicator, led + 2);
 				result->console_initialized |= indicator->initialized;
+#endif
 				break;
 
 			case 't':
+#ifdef THINKPAD_AVAILABLE
 				indicator->method = THINKPAD;
 				indicator->turn_notification_on = &thinkpad_turn_on;
 				indicator->turn_notification_off = &thinkpad_turn_off;
 
 				thinkpad_init(indicator, led + 2);
 				result->thinkpad_initialized |= indicator->initialized;
+#endif
 				break;
 		}
 
@@ -183,15 +190,21 @@ void unload_config(Config *config)
 		// allow subsystems to clean up
 		switch (indicator->method) {
 			case X_ORG:
+#ifdef XORG_AVAILABLE
 				xorg_quit(indicator);
+#endif
 				break;
 
 			case CONSOLE:
+#ifdef CONSOLE_AVAILABLE
 				console_quit(indicator);
+#endif
 				break;
 
 			case THINKPAD:
+#ifdef THINKPAD_AVAILABLE
 				thinkpad_quit(indicator);
+#endif
 				break;
 		}
 
@@ -404,6 +417,16 @@ int main(int argc, const char *argv[])
 			"\tevent=<type>\t\tType: read, write, both\n"
 			"\tdevice=<name>\t\tName: eg. sda1, sda, mmcblkp1\n\n"
 			);
+		printf("Supported providers:\n");
+#ifdef XORG_AVAILABLE
+		printf("\tx - X.Org\n");
+#endif
+#ifdef CONSOLE_AVAILABLE
+		printf("\tc - Console\n");
+#endif
+#ifdef THINKPAD_AVAILABLE
+		printf("\tt - ThinkPad\n");
+#endif
 		exit(EXIT_SUCCESS);
 	}
 

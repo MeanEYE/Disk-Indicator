@@ -51,7 +51,7 @@ void console_init(Indicator *indicator, char *config)
 	// get tty device
 	console_config->tty[0] = '\0';
 	strcat(console_config->tty, "/dev/");
-	if (sscanf(config, XORG_CONFIG_FORMAT, device, led) == 2)
+	if (sscanf(config, CONSOLE_CONFIG_FORMAT, device, led) == 2)
 		strcat(console_config->tty, device); else
 		strcat(console_config->tty, "console");
 

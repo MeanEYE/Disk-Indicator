@@ -1,4 +1,5 @@
 #pragma once
+#define XORG_AVAILABLE
 
 #include <stdbool.h>
 #include <X11/Xlib.h>

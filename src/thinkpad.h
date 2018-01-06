@@ -1,4 +1,5 @@
 #pragma once
+#define THINKPAD_AVAILABLE
 
 #include "shared.h"
 
