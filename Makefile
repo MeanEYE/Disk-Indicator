@@ -10,9 +10,9 @@ debug: COMPILE_FLAGS += -g
 debug: $(PROJECT)
 
 .check-dependencies:
-	ifeq (,$(wildcard build/dependencies.h))
-		$(error Missing dependencies file. To generate one, please run ./configure.sh)
-	endif
+ifeq ("$(realpath ./build/dependencies.h)","")
+	$(error Missing dependencies file. To generate one, please run ./configure.sh)
+endif
 
 %.o: src/%.c src/%.h
 	$(COMPILER) $(COMPILE_FLAGS) -c $<
