@@ -93,8 +93,8 @@ void xorg_turn_on(Indicator *indicator)
 	XGetKeyboardControl(xorg_config->display, xorg_config->keyboard_state);
 	led_mask = xorg_config->keyboard_state->led_mask;
 
-	// store initial flag state
-	xorg_config->initial_state = (led_mask & xorg_config->flag_bit) == xorg_config->flag_bit;
+	// store initial flag state, mask has one bit per LED number
+	xorg_config->initial_state = (led_mask & (1UL << (xorg_config->flag_bit - 1))) != 0;
 
 	// set new state
 	if (xorg_config->initial_state)
