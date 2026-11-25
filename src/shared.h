@@ -29,6 +29,7 @@ typedef struct Indicator {
 	char *config;
 
 	// history
+	bool has_history;
 	unsigned long read_count;
 	unsigned long write_count;
 } Indicator;
