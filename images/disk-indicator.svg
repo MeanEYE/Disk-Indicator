@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+	<defs>
+		<linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0" stop-color="#6c7a86"/>
+			<stop offset="1" stop-color="#434e58"/>
+		</linearGradient>
+		<linearGradient id="platter" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#f6f8fa"/>
+			<stop offset="1" stop-color="#b9c3cc"/>
+		</linearGradient>
+	</defs>
+	<rect x="18" y="8" width="92" height="112" rx="12" fill="url(#body)"/>
+	<rect x="18" y="108" width="92" height="12" rx="6" fill="#343d45"/>
+	<circle cx="64" cy="52" r="34" fill="url(#platter)"/>
+	<circle cx="64" cy="52" r="34" fill="none" stroke="#343d45" stroke-width="2"/>
+	<circle cx="64" cy="52" r="9" fill="#434e58"/>
+	<circle cx="64" cy="52" r="3" fill="#b9c3cc"/>
+	<path d="M94 98 L74 64" stroke="#2a3138" stroke-width="7" stroke-linecap="round"/>
+	<circle cx="94" cy="98" r="8" fill="#2a3138"/>
+	<circle cx="36" cy="98" r="12" fill="#ff7800" opacity="0.35"/>
+	<circle cx="36" cy="98" r="6" fill="#ffa348"/>
+</svg>

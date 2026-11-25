@@ -1,5 +1,8 @@
-Disk-Indicator
-==============
+<p align="center">
+	<img src="images/disk-indicator.svg" width="128" height="128" alt="Disk-Indicator logo">
+</p>
+
+<h1 align="center">Disk-Indicator</h1>
 
 Small program for Linux that will turn your `Scroll`, `Caps` or `Num Lock` LED or LED on your ThinkPad laptop into hard disk indicator.
 
