@@ -308,8 +308,8 @@ void read_stats(char *device, unsigned long *read_count, unsigned long *write_co
 
 		// let check indicators know we reached end of file
 		strcpy(device, "null");
-		read_count = 0;
-		write_count = 0;
+		*read_count = 0;
+		*write_count = 0;
 		return;
 	}
 
@@ -331,11 +331,10 @@ void handle_signal()
  */
 int is_attached(void)
 {
-	return isatty(
-		fileno(stdout) &&
+	return
+		isatty(fileno(stdout)) &&
 		isatty(fileno(stdin)) &&
-		isatty(fileno(stderr))
-		);
+		isatty(fileno(stderr));
 }
 
 /**
@@ -382,18 +381,21 @@ char check_indicators(void)
 			if (strcmp(stat_device, indicator->device) != 0)
 				continue;
 
-			// compare data
+			// compare data, first reading only sets the baseline
 			changed = false;
 
-			if (indicator->event == READ || indicator->event == BOTH)
-				changed |= stat_read_count != indicator->read_count;
+			if (indicator->has_history) {
+				if (indicator->event == READ || indicator->event == BOTH)
+					changed |= stat_read_count != indicator->read_count;
 
-			if (indicator->event == WRITE || indicator->event == BOTH)
-				changed |= stat_write_count != indicator->write_count;
+				if (indicator->event == WRITE || indicator->event == BOTH)
+					changed |= stat_write_count != indicator->write_count;
+			}
 
 			// store new data
 			indicator->read_count = stat_read_count;
 			indicator->write_count = stat_write_count;
+			indicator->has_history = true;
 
 			// turn the light on
 			if (changed) {
