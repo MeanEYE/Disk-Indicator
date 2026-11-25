@@ -120,10 +120,11 @@ Config *load_config(int argc, const char *argv[])
 		goto _exit;
 	}
 
-	char led[20];
+	// sizes have to match limits in config format
+	char led[256];
 	char device[20];
 	char event[6];
-	char line[128];
+	char line[512];
 
 	while (read_line(config, line) > 0) {
 		// parse line from config file

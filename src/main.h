@@ -5,7 +5,7 @@
 
 #define FILENAME "/proc/diskstats"
 #define STATS_FORMAT "%*d %*d %s %lu %*u %*u %*u %lu %*u %*u %*u %*u %*u %*u"
-#define CONFIG_FORMAT "led=%s event=%s device=%s"
+#define CONFIG_FORMAT "led=%255s event=%5s device=%19s"
 
 
 typedef struct {
