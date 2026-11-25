@@ -6,6 +6,35 @@
 
 Small program for Linux that will turn your `Scroll`, `Caps` or `Num Lock` LED or LED on your ThinkPad laptop into hard disk indicator.
 
+### Installation
+
+Select providers you need, build and install:
+```
+./configure.sh --evdev
+make
+sudo make install
+```
+
+Run `./configure.sh --help` for the list of providers. Install step copies program to `/usr/local/bin`, adds systemd service and creates `/etc/disk-indicator.conf` unless one already exists. Paths can be changed with `PREFIX`, `BINDIR`, `SYSCONFDIR`, `UNITDIR` and `DESTDIR`.
+
+Edit `/etc/disk-indicator.conf` to configure your indicators, then start the service and enable it on boot:
+```
+sudo systemctl daemon-reload
+sudo systemctl enable --now disk-indicator
+```
+
+Service is restricted to its config file and LED devices, but runs as root so all providers work. If you only use input events provider it can run as unprivileged user instead. Run `sudo systemctl edit disk-indicator` and add:
+```
+[Service]
+DynamicUser=yes
+SupplementaryGroups=input
+CapabilityBoundingSet=
+```
+
+X.Org provider needs graphical session and can not be used from system service. Start the program from your desktop's autostart instead.
+
+To remove everything except config file run `sudo make uninstall`.
+
 ### Usage
 
 `./disk_indicator [-f] [-c config.file]`
