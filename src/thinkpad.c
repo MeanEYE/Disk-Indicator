@@ -48,11 +48,28 @@ void thinkpad_init(Indicator *indicator, char *led)
 	strcpy(thinkpad_config->led, led);
 
 	// open acpi device
-	thinkpad_config->device = open(THINKPAD_ACPI_DEVICE, O_RDONLY);
+	thinkpad_config->device = open(THINKPAD_ACPI_DEVICE, O_WRONLY);
 
-	if (!thinkpad_config->device)
-		indicator->initialized = false; else
+	if (thinkpad_config->device < 0) {
+		perror(THINKPAD_ACPI_DEVICE);
+		indicator->initialized = false;
+	} else {
 		indicator->initialized = true;
+	}
+}
+
+/**
+ * Send LED command to ACPI device. Whole command has to be
+ * sent in a single write as each one is parsed separately.
+ */
+static void thinkpad_set_state(ThinkpadConfig *thinkpad_config, const char *state)
+{
+	char command[32];
+	int length = snprintf(command, sizeof(command), "%s %s\n", thinkpad_config->led, state);
+
+	if (length > 0 && length < (int) sizeof(command))
+		if (write(thinkpad_config->device, command, length) < 0)
+			perror(THINKPAD_ACPI_DEVICE);
 }
 
 /**
@@ -81,9 +98,7 @@ void thinkpad_turn_on(Indicator *indicator)
 	ThinkpadConfig *thinkpad_config = (ThinkpadConfig *) indicator->config;
 
 	// set new state
-	write(thinkpad_config->device, thinkpad_config->led, strlen(thinkpad_config->led));
-	write(thinkpad_config->device, " on\n", 4);
-	fsync(thinkpad_config->device);
+	thinkpad_set_state(thinkpad_config, "on");
 }
 
 /**
@@ -94,7 +109,5 @@ void thinkpad_turn_off(Indicator *indicator)
 	ThinkpadConfig *thinkpad_config = (ThinkpadConfig *) indicator->config;
 
 	// set new state
-	write(thinkpad_config->device, thinkpad_config->led, strlen(thinkpad_config->led));
-	write(thinkpad_config->device, " off\n", 5);
-	fsync(thinkpad_config->device);
+	thinkpad_set_state(thinkpad_config, "off");
 }
