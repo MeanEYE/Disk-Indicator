@@ -43,6 +43,37 @@ unsigned long stat_read_count;
 unsigned long stat_write_count;
 
 /**
+ * Let provider clean up and free memory taken by the indicator.
+ */
+static void free_indicator(Indicator *indicator)
+{
+	// allow subsystems to clean up, config is only set by provider
+	if (indicator->config != NULL)
+		switch (indicator->method) {
+			case X_ORG:
+#ifdef XORG_AVAILABLE
+				xorg_quit(indicator);
+#endif
+				break;
+
+			case CONSOLE:
+#ifdef CONSOLE_AVAILABLE
+				console_quit(indicator);
+#endif
+				break;
+
+			case THINKPAD:
+#ifdef THINKPAD_AVAILABLE
+				thinkpad_quit(indicator);
+#endif
+				break;
+		}
+
+	free(indicator->device);
+	free(indicator);
+}
+
+/**
  * Create new configuration structure and populate
  * with default values if no arguments were passed.
  */
@@ -148,6 +179,13 @@ Config *load_config(int argc, const char *argv[])
 				break;
 		}
 
+		// skip indicators whose provider is unknown, not compiled in or failed to start
+		if (!indicator->initialized) {
+			fprintf(stderr, "Ignoring indicator, provider not available: %s\n", line);
+			free_indicator(indicator);
+			continue;
+		}
+
 		// assign event type
 		if (strcmp(event, "read") == 0) {
 			indicator->event = READ;
@@ -196,33 +234,8 @@ void unload_config(Config *config)
 	close_stats_file();
 
 	// free indicator memory
-	for (int i = 0; i < config->indicator_count; i++) {
-		Indicator *indicator = config->indicators[i];
-
-		// allow subsystems to clean up
-		switch (indicator->method) {
-			case X_ORG:
-#ifdef XORG_AVAILABLE
-				xorg_quit(indicator);
-#endif
-				break;
-
-			case CONSOLE:
-#ifdef CONSOLE_AVAILABLE
-				console_quit(indicator);
-#endif
-				break;
-
-			case THINKPAD:
-#ifdef THINKPAD_AVAILABLE
-				thinkpad_quit(indicator);
-#endif
-				break;
-		}
-
-		free(config->indicators[i]->device);
-		free(config->indicators[i]);
-	}
+	for (int i = 0; i < config->indicator_count; i++)
+		free_indicator(config->indicators[i]);
 
 	free(config);
 }

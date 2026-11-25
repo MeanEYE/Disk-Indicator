@@ -56,8 +56,13 @@ void xorg_init(Indicator *indicator, char *led)
 		xorg_config->flag_bit = XORG_CAPS_LOCK;
 	}
 
-	// mark indicator as initialized
-	indicator->initialized = true;
+	// mark indicator as initialized only if display is reachable
+	if (xorg_config->display == NULL) {
+		fprintf(stderr, "Unable to open X.Org display, is DISPLAY set?\n");
+		indicator->initialized = false;
+	} else {
+		indicator->initialized = true;
+	}
 }
 
 /**
@@ -67,7 +72,8 @@ void xorg_quit(Indicator *indicator)
 {
 	XOrgConfig *xorg_config = (XOrgConfig *) indicator->config;
 
-	XCloseDisplay(xorg_config->display);
+	if (xorg_config->display != NULL)
+		XCloseDisplay(xorg_config->display);
 	free(xorg_config->keyboard_state);
 	free(xorg_config);
 }
