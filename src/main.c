@@ -51,7 +51,7 @@ Config *load_config(int argc, const char *argv[])
 	Config *result = calloc(1, sizeof(Config));
 	int config;
 	char config_file[4096] = {0};
-	char default_config_file[] = "~/.disk-indicator";
+	char default_config_file[] = ".disk-indicator";
 
 	// set default values
 	result->xorg_initialized = false;
@@ -63,11 +63,23 @@ Config *load_config(int argc, const char *argv[])
 		argc--;
 		argv++;
 
-		strcpy(config_file, argv[0]);
+		if (argc == 0) {
+			fprintf(stderr, "Option -c requires a file name.\n");
+			goto _exit;
+		}
+
+		snprintf(config_file, sizeof(config_file), "%s", argv[0]);
 
 	} else {
-		// use default config file
-		strcpy(config_file, default_config_file);
+		// use default config file in home directory
+		const char *home = getenv("HOME");
+
+		if (home == NULL) {
+			fprintf(stderr, "HOME is not set, please specify config file with -c.\n");
+			goto _exit;
+		}
+
+		snprintf(config_file, sizeof(config_file), "%s/%s", home, default_config_file);
 	}
 
 	// load config file
