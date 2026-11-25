@@ -67,6 +67,12 @@ static void free_indicator(Indicator *indicator)
 				thinkpad_quit(indicator);
 #endif
 				break;
+
+			case EVDEV:
+#ifdef EVDEV_AVAILABLE
+				evdev_quit(indicator);
+#endif
+				break;
 		}
 
 	free(indicator->device);
@@ -178,6 +184,17 @@ Config *load_config(int argc, const char *argv[])
 				result->thinkpad_initialized |= indicator->initialized;
 #endif
 				break;
+
+			case 'e':
+#ifdef EVDEV_AVAILABLE
+				indicator->method = EVDEV;
+				indicator->turn_notification_on = &evdev_turn_on;
+				indicator->turn_notification_off = &evdev_turn_off;
+
+				evdev_init(indicator, led + 2);
+				result->evdev_initialized |= indicator->initialized;
+#endif
+				break;
 		}
 
 		// skip indicators whose provider is unknown, not compiled in or failed to start
@@ -219,6 +236,7 @@ _exit:
 	result->initialized |= result->xorg_initialized;
 	result->initialized |= result->console_initialized;
 	result->initialized |= result->thinkpad_initialized;
+	result->initialized |= result->evdev_initialized;
 
 	if (result->initialized)
 		printf("Loaded %d indicators.\n", result->indicator_count);
@@ -439,9 +457,11 @@ int main(int argc, const char *argv[])
 			"Sample config file:\n"
 			"\tled=t|0 event=read device=sda\n"
 			"\tled=c|tty1|caps event=write device=sda\n"
-			"\tled=x|scroll event=both device=sda1\n\n"
+			"\tled=x|scroll event=both device=sda1\n"
+			"\tled=e|scroll event=both device=sda1\n"
+			"\tled=e|event3|caps event=both device=sda1\n\n"
 			"Config params:\n"
-			"\tled=<provider>|<name>\tProvider: t, c, x\tName: 0-15, caps, scroll, num\n"
+			"\tled=<provider>|<name>\tProvider: t, c, x, e\tName: 0-15, caps, scroll, num\n"
 			"\tevent=<type>\t\tType: read, write, both\n"
 			"\tdevice=<name>\t\tName: eg. sda1, sda, mmcblkp1\n\n"
 			);
@@ -454,6 +474,9 @@ int main(int argc, const char *argv[])
 #endif
 #ifdef THINKPAD_AVAILABLE
 		printf("\tt - ThinkPad\n");
+#endif
+#ifdef EVDEV_AVAILABLE
+		printf("\te - Input events (Wayland)\n");
 #endif
 		exit(EXIT_SUCCESS);
 	}

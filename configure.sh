@@ -8,6 +8,7 @@ function show_help {
 	echo -e "\t--xorg              Include X.Org provider"
 	echo -e "\t--console           Include console provider"
 	echo -e "\t--thinkpad          Include ThinkPad provider"
+	echo -e "\t--evdev             Include input events provider (Wayland)"
 	echo -e "\t--all               Include all providers"
 	exit 0
 }
@@ -15,6 +16,7 @@ function show_help {
 add_xorg=false
 add_console=false
 add_thinkpad=false
+add_evdev=false
 
 # show help when no params are specified
 if [ $# = 0 ]; then
@@ -31,6 +33,7 @@ while test $# -gt 0; do
 			add_xorg=true
 			add_console=true
 			add_thinkpad=true
+			add_evdev=true
 			shift
 			;;
 		--xorg)
@@ -43,6 +46,10 @@ while test $# -gt 0; do
 			;;
 		--thinkpad)
 			add_thinkpad=true
+			shift
+			;;
+		--evdev)
+			add_evdev=true
 			shift
 			;;
 		*)
@@ -71,4 +78,9 @@ fi
 if $add_thinkpad; then
 	echo -n "thinkpad.o " >> build/objects
 	echo "#include \"../src/thinkpad.h\"" >> build/dependencies.h
+fi
+
+if $add_evdev; then
+	echo -n "evdev.o " >> build/objects
+	echo "#include \"../src/evdev.h\"" >> build/dependencies.h
 fi

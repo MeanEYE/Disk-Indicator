@@ -27,6 +27,7 @@ typedef struct {
 	bool xorg_initialized;
 	bool console_initialized;
 	bool thinkpad_initialized;
+	bool evdev_initialized;
 } Config;
 
 

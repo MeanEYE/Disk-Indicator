@@ -6,7 +6,8 @@
 enum notify_method {
 	X_ORG,
 	CONSOLE,
-	THINKPAD
+	THINKPAD,
+	EVDEV
 };
 
 enum indicator_event {
