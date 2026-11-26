@@ -374,9 +374,12 @@ void daemonize(void)
 	printf("Going away from console, pid: %d\n", getpid());
 
 	// close file descriptors
-	freopen("/dev/null", "r", stdin);
-	freopen("/dev/null", "w", stdout);
-	freopen("/dev/null", "w", stderr);
+	if (
+		freopen("/dev/null", "r", stdin) == NULL ||
+		freopen("/dev/null", "w", stdout) == NULL ||
+		freopen("/dev/null", "w", stderr) == NULL
+		)
+		exit(EXIT_FAILURE);
 
 	if (setpgid(0, 0) < 0 || pid == -1)
 		exit(EXIT_FAILURE);
