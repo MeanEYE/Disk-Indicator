@@ -1,5 +1,5 @@
 /**
- * Disk Indicator 0.3
+ * Disk Indicator 0.3.1
  * Copyright © 2017. by Mladen Mijatov <meaneye.rcf@gmail.com>.
  *
  * This nifty little tool will turn your scroll lock (or some other LED)

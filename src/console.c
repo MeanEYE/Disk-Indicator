@@ -1,5 +1,5 @@
 /**
- * Disk Indicator 0.3
+ * Disk Indicator 0.3.1
  * Copyright © 2015. by Mladen Mijatov <meaneye.rcf@gmail.com>.
  *
  * Support for notification using keyboard LEDs through
